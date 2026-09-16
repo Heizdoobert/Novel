@@ -31,13 +31,15 @@ export interface ReaderInitialData {
   currentChapter: Chapter | null;
 }
 
+async function getDecryptedContentUrl(content: unknown): Promise<string | null> {
+  if (typeof content !== "string" || !content) return null;
+  const rawContent = content.startsWith("ENCv1:") ? await decryptFieldClient(content) : content;
+  return getChapterContentUrl(rawContent);
+}
+
 async function resolveChapterContent(currentData: Chapter | null): Promise<string> {
   if (!currentData?.content) return "";
-  const rawContent =
-    typeof currentData.content === "string" && currentData.content.startsWith("ENCv1:")
-      ? await decryptFieldClient(currentData.content)
-      : currentData.content;
-  const contentUrl = getChapterContentUrl(rawContent);
+  const contentUrl = await getDecryptedContentUrl(currentData.content);
   if (!contentUrl) return "";
   const res = await fetch(proxiedR2ImageUrl(contentUrl));
   if (!res.ok) throw new Error(`Failed to fetch chapter text (${res.status})`);
@@ -218,7 +220,7 @@ export function useReadChapterPresenter(initialData?: ReaderInitialData | null) 
   }, [pageIndex, prevPage, prevChapter, comicId, router]);
 
   const handleDownload = async () => {
-    const contentUrl = currentChapter?.content ? getChapterContentUrl(currentChapter.content) : null;
+    const contentUrl = currentChapter?.content ? await getDecryptedContentUrl(currentChapter.content) : null;
     if (downloading || !contentUrl) return;
     setDownloading(true);
     try {
