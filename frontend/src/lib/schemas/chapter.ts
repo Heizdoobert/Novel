@@ -4,7 +4,7 @@ export const createChapterSchema = z.object({
   story_id: z.string().min(1, 'ID truyện không được để trống'),
   title: z.string().min(1, 'Tiêu đề chương không được để trống'),
   chapter_number: z.number().min(0),
-  images: z.array(z.string()).optional().default([]),
+  content_url: z.string().optional().default(""),
 });
 
 export const updateChapterSchema = createChapterSchema.partial();

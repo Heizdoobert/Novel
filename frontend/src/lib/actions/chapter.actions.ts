@@ -24,7 +24,7 @@ export async function createChapter(data: CreateChapterInput): Promise<ActionRes
         story_id: parsed.data.story_id,
         chapter_number: parsed.data.chapter_number,
         title: parsed.data.title,
-        content: JSON.stringify(parsed.data.images ?? []),
+        content: parsed.data.content_url ?? "",
       })
       .select('id')
       .single();
@@ -51,10 +51,10 @@ export async function updateChapter(
     if (!db) return { success: false, error: 'Không thể kết nối cơ sở dữ liệu' };
     const updateFields: Record<string, unknown> = { ...parsed.data, updated_at: new Date().toISOString() };
     delete updateFields.story_id;
-    if (updateFields.images !== undefined) {
-      updateFields.content = JSON.stringify(updateFields.images ?? []);
+    if (updateFields.content_url !== undefined) {
+      updateFields.content = updateFields.content_url;
     }
-    delete updateFields.images;
+    delete updateFields.content_url;
     const { error } = await db.from('chapters').update(updateFields).eq('id', id);
     if (error) return { success: false, error: error.message };
     revalidateTag(CACHE_TAGS.CHAPTERS(storyId), 'max');
