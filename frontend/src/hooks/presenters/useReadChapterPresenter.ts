@@ -96,9 +96,14 @@ export function useReadChapterPresenter(initialData?: ReaderInitialData | null) 
     setCurrentChapter(initialData.currentChapter);
     setAllChapters(initialData.allChapters);
     setLoading(false);
-    restoreDoneRef.current = false;
     void loadChapterText(initialData.currentChapter);
   }
+
+  // Ref mutations are side effects and must not run during render; reset the
+  // saved-page restore guard after commit, keyed to the same reseed identity.
+  useEffect(() => {
+    restoreDoneRef.current = false;
+  }, [reseededChapterId]);
 
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
     touchStartRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };

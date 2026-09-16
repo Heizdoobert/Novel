@@ -4,7 +4,7 @@ import { ACTION_ADMIN_ROLES } from '@/lib/security/permission';
 import { getBucketForFolder, putObject } from '@/lib/r2/s3';
 
 const ALLOWED_ROLES = ACTION_ADMIN_ROLES;
-// ponytail: 50MB in-memory ceiling (was 250MB) — covers .cbz/.zip; upgrade to streaming multipart put when archives exceed it
+// ponytail: 50MB in-memory ceiling; upgrade to streaming multipart put if uploads ever approach it
 const MAX_FILE_SIZE = 50 * 1024 * 1024;
 const ALLOWED_TYPES = new Set([
   'image/jpeg',
@@ -12,19 +12,18 @@ const ALLOWED_TYPES = new Set([
   'image/webp',
   'image/avif',
   'image/gif',
-  'application/x-cbz',
-  'application/zip',
-  'application/x-zip-compressed',
+  'text/plain',
+  'text/markdown',
   'application/octet-stream',
 ]);
 const ALLOWED_EXTENSIONS = new Set([
-  'jpg', 'jpeg', 'png', 'webp', 'avif', 'gif', 'cbz', 'zip',
+  'jpg', 'jpeg', 'png', 'webp', 'avif', 'gif', 'txt', 'md',
 ]);
 const ALLOWED_FOLDERS = new Set(['chapters', 'covers', 'avatars']);
 
 /**
  * POST /api/r2/upload
- * Accepts multipart/form-data uploads for comic images, covers, or .cbz/.zip archives.
+ * Accepts multipart/form-data uploads for chapter text/markdown content, covers, or avatars.
  * Enforces RBAC (admin/superadmin/employee only), validates file type, size, and folder.
  */
 export async function POST(request: NextRequest) {
@@ -51,9 +50,11 @@ export async function POST(request: NextRequest) {
   // Extract and validate extension
   const nameParts = file.name.split('.');
   const extension = nameParts.length > 1 ? nameParts.pop()!.toLowerCase().replace(/[^a-z0-9]/g, '') : '';
-  const isCbzOrZip = extension === 'cbz' || extension === 'zip';
+  // Browsers inconsistently sniff MIME for .txt/.md (often "" or a generic type), so
+  // trust the extension for chapter text files instead of requiring an exact MIME match.
+  const isTextChapterFile = extension === 'txt' || extension === 'md';
 
-  if (!isCbzOrZip && !ALLOWED_TYPES.has(file.type)) {
+  if (!isTextChapterFile && !ALLOWED_TYPES.has(file.type)) {
     return NextResponse.json({ error: 'Unsupported file type', success: false }, { status: 415 });
   }
   if (extension && !ALLOWED_EXTENSIONS.has(extension)) {

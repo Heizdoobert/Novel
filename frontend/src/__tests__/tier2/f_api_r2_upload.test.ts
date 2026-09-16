@@ -109,6 +109,11 @@ describe('POST /api/r2/upload', () => {
     expect(body.error).toMatch(/unsupported/i);
   });
 
+  it('accepts a .txt file even when the browser reports no MIME type', async () => {
+    const res = await uploadFile('chapter.txt', 'chapter text', '');
+    expect(res.status).toBe(200);
+  });
+
   it('returns 415 for unsupported extension', async () => {
     const res = await uploadFile('script.php', '<?php', 'application/octet-stream');
     expect(res.status).toBe(415);
@@ -141,8 +146,8 @@ describe('POST /api/r2/upload', () => {
   it.each([
     ['image.png', 'png-data', 'image/png', '.png'],
     ['photo.webp', 'webp-data', 'image/webp', '.webp'],
-    ['comic.cbz', 'zip-data', 'application/x-cbz', '.cbz'],
-    ['archive.zip', 'zip-data', 'application/zip', '.zip'],
+    ['chapter.txt', 'chapter text', 'text/plain', '.txt'],
+    ['chapter.md', 'chapter text', 'text/markdown', '.md'],
   ])('accepts %s', async (name, content, type, ext) => {
     const res = await uploadFile(name, content, type);
     expect(res.status).toBe(200);

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { checkRateLimit, getClientIP, MAX_TRACKED_IPS, trackedIpCount } from '../middleware/rateLimitKV';
 
 function req(ip: string, headers: Record<string, string> = {}): Request {
-  return new Request('https://gateway.test/api/comics', {
+  return new Request('https://gateway.test/api/novels', {
     headers: { 'cf-connecting-ip': ip, ...headers },
   });
 }
@@ -13,7 +13,7 @@ describe('getClientIP', () => {
   });
 
   it('does not fall back to a client-controlled x-forwarded-for', () => {
-    const r = new Request('https://gateway.test/api/comics', {
+    const r = new Request('https://gateway.test/api/novels', {
       headers: { 'x-forwarded-for': '127.0.0.1' },
     });
     // Spoofing XFF to a loopback address must not reach the loopback bypass.
@@ -21,8 +21,8 @@ describe('getClientIP', () => {
   });
 
   it('does not default to a bypassed address when no Cloudflare header is present', async () => {
-    const r = new Request('https://gateway.test/api/comics');
-    const result = await checkRateLimit(r, false, null, '/comics');
+    const r = new Request('https://gateway.test/api/novels');
+    const result = await checkRateLimit(r, false, null, '/novels');
     expect(result.limit).toBeLessThan(999999);
   });
 });
@@ -30,7 +30,7 @@ describe('getClientIP', () => {
 describe('checkRateLimit store bound', () => {
   it('does not grow past MAX_TRACKED_IPS', async () => {
     for (let i = 0; i < MAX_TRACKED_IPS + 500; i++) {
-      await checkRateLimit(req(`198.51.100.${i % 256}.${i}`), false, null, '/comics');
+      await checkRateLimit(req(`198.51.100.${i % 256}.${i}`), false, null, '/novels');
     }
     expect(trackedIpCount()).toBeLessThanOrEqual(MAX_TRACKED_IPS);
   });
@@ -39,7 +39,7 @@ describe('checkRateLimit store bound', () => {
     const ip = '203.0.113.77';
     let blocked = false;
     for (let i = 0; i < 400; i++) {
-      const result = await checkRateLimit(req(ip), false, null, '/comics');
+      const result = await checkRateLimit(req(ip), false, null, '/novels');
       if (!result.allowed) {
         blocked = true;
         break;

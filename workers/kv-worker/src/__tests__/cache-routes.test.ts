@@ -66,7 +66,7 @@ describe('cache isolation between callers', () => {
   });
 });
 
-describe('GET /comics/recommendations', () => {
+describe('GET /novels/recommendations', () => {
   it('rejects a comicId that is not a UUID', async () => {
     const kv = fakeKV();
     const env = envWith(kv);
@@ -76,7 +76,7 @@ describe('GET /comics/recommendations', () => {
       return Response.json([]);
     });
 
-    const url = new URL('https://gateway.test/api/comics/recommendations?comicId=abc&select=*');
+    const url = new URL('https://gateway.test/api/novels/recommendations?comicId=abc&select=*');
     const res = await handleNovelRecommendations(url, env, null);
 
     expect(res.status).toBe(400);
@@ -92,7 +92,7 @@ describe('GET /comics/recommendations', () => {
     const env = envWith(kv);
     vi.stubGlobal('fetch', async () => Response.json([{ id: '1', title: 'Top' }]));
 
-    const url = new URL('https://gateway.test/api/comics/recommendations');
+    const url = new URL('https://gateway.test/api/novels/recommendations');
     const res = await handleNovelRecommendations(url, env, null);
 
     expect(res.status).toBe(200);
