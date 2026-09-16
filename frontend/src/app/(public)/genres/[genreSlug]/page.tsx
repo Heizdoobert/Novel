@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation';
-import { SearchPageContent } from '@/components/comics/SearchPageContent';
+import { SearchPageContent } from '@/components/novels/SearchPageContent';
 import { getServerSupabase } from '@/lib/supabase/server';
 
 type Props = {

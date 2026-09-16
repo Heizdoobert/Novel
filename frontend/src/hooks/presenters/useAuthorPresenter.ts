@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import * as adminService from '@/services/admin/admin.service';
-import { fetchAuthors } from '@/services/comics/taxonomy.service';
+import { fetchAuthors } from '@/services/novels/taxonomy.service';
 
 export function useAuthorPresenter() {
   const authorsQuery = useQuery({

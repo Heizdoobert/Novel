@@ -5,8 +5,8 @@ import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "motion/react";
 import { Search, Loader2, X } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
-import { fetchStoriesPage } from "@/services/comics/story.service";
-import { proxiedR2ImageUrl } from "@/services/comics/comicCms.service";
+import { fetchStoriesPage } from "@/services/novels/story.service";
+import { proxiedR2ImageUrl } from "@/services/novels/comicCms.service";
 import { ROUTES } from "@/lib/constants/routes";
 import { Story } from "@/types/entities";
 

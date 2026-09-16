@@ -7,7 +7,7 @@ import {
   uploadChapterImages,
   createComic,
   createComicChapter,
-} from '@/services/comics/comic.service';
+} from '@/services/novels/comic.service';
 
 const state = vi.hoisted(() => {
   process.env.NEXT_PUBLIC_ENC_KEY = process.env.NEXT_PUBLIC_ENC_KEY ?? 'test-secret-key-0123456789abcdef';

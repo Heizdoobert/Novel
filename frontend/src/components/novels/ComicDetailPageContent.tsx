@@ -14,10 +14,10 @@ import {
   ArrowLeft,
   Play,
 } from "lucide-react";
-import { RecommendedComics } from "@/components/comics/RecommendedComics";
+import { RecommendedComics } from "@/components/novels/RecommendedComics";
 import { BookmarkButton } from "@/components/user/bookmark-button";
 import { useComicDetailPresenter } from "@/hooks/presenters/useComicDetailPresenter";
-import type { ComicContext as Comic } from "@/services/comics/comic.service";
+import type { ComicContext as Comic } from "@/services/novels/comic.service";
 import type { Chapter, Category } from "@/types/entities";
 import { ROUTES } from "@/lib/constants/routes";
 import { normalizeName } from "@/lib/utils/slug";

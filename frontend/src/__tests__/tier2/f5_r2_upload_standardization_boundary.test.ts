@@ -10,11 +10,11 @@ vi.mock('@/lib/supabase/client', () => ({
 import {
   uploadChapterImages,
   uploadComicCover,
-} from '@/services/comics/comic.service';
+} from '@/services/novels/comic.service';
 
 const REPO_ROOT = path.resolve(__dirname, '../../../../');
 
-const COMIC_SERVICE = 'frontend/src/services/comics/comic.service.ts';
+const COMIC_SERVICE = 'frontend/src/services/novels/comic.service.ts';
 
 function readRepoFile(relativePath: string): string {
   return fs.readFileSync(path.join(REPO_ROOT, relativePath), 'utf-8');

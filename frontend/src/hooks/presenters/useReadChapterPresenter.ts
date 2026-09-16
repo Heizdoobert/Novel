@@ -4,18 +4,18 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ROUTES } from "@/lib/constants/routes";
 import { apiClient } from "@/lib/api/apiClient";
-import { ComicContext as Comic } from "@/services/comics/comic.service";
+import { ComicContext as Comic } from "@/services/novels/comic.service";
 import { Chapter } from "@/types/entities";
 import { toast } from "sonner";
 import { useTheme } from "@/context/ThemeContext";
 import { saveReadingProgress } from "@/actions/reading-history.actions";
-import { proxiedR2ImageUrl } from "@/services/comics/comicCms.service";
+import { proxiedR2ImageUrl } from "@/services/novels/comicCms.service";
 import { decryptFieldClient } from "@/lib/security/encryption";
 import { getChapterContentUrl } from "@/lib/r2/chapter-content";
 import { usePaginatedChapterText } from "@/hooks/features/use-paginated-chapter-text";
 
-import { fetchStoryById } from "@/services/comics/story.service";
-import { fetchChaptersByStoryId } from "@/services/comics/chapter.service";
+import { fetchStoryById } from "@/services/novels/story.service";
+import { fetchChaptersByStoryId } from "@/services/novels/chapter.service";
 import { supabase } from "@/lib/supabase/client";
 
 export interface ReaderChapterListItem {

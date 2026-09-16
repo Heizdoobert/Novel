@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
-import { HomePage } from '@/components/comics/HomePage';
+import { HomePage } from '@/components/novels/HomePage';
 import { getServerSupabase } from '@/lib/supabase/server';
-import type { ComicContext as Comic } from '@/services/comics/comic.service';
+import type { ComicContext as Comic } from '@/services/novels/comic.service';
 import type { Chapter } from '@/types/entities';
 
 export const metadata: Metadata = {

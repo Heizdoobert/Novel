@@ -5,13 +5,13 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "motion/react";
 import { Image as ImageIcon, Search, SearchX, SlidersHorizontal, X } from "lucide-react";
-import { FilterMenu } from "@/components/comics/FilterMenu";
-import { SortDropdown } from "@/components/comics/SortDropdown";
+import { FilterMenu } from "@/components/novels/FilterMenu";
+import { SortDropdown } from "@/components/novels/SortDropdown";
 import { Pagination } from "@/components/navigation/Pagination";
 import { getStatusStyles } from "@/lib/utils/status-styles";
 import { ROUTES } from "@/lib/constants/routes";
 import { useSearchPresenter } from "@/hooks/presenters/useSearchPresenter";
-import { proxiedR2ImageUrl } from "@/services/comics/comicCms.service";
+import { proxiedR2ImageUrl } from "@/services/novels/comicCms.service";
 
 export const SearchPageContent: React.FC<{ initialCategory?: string }> = ({
   initialCategory,

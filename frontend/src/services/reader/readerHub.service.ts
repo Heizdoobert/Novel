@@ -1,6 +1,6 @@
 import { ROUTES } from '@/lib/constants/routes';
 import { apiClient } from '@/lib/api/apiClient';
-import { getAccessToken } from '../comics/comic.service';
+import { getAccessToken } from '../novels/comic.service';
 import { BookmarkListSchema, HistoryItemListSchema } from '@/types/readerHub.dto';
 
 const BOOKMARKS_KEY = 'reader:bookmarks';

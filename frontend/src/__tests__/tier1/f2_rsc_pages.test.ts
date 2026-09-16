@@ -79,7 +79,7 @@ describe('F2 RSC page files under src/app', () => {
     const content = readPage('(public)/page.tsx');
     expect(content).toMatch(/export default async function/);
     expect(content).not.toContain('use client');
-    expect(content).toContain('@/components/comics/HomePage');
+    expect(content).toContain('@/components/novels/HomePage');
   });
 
   it('forbidden and unauthorized pages redirect to the handled exception routes', () => {

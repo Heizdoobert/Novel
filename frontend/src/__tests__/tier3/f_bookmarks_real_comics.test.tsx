@@ -18,7 +18,7 @@ vi.mock('@/hooks/features/useBookmarks', () => ({
   }),
 }));
 
-vi.mock('@/services/comics/story.service', () => ({
+vi.mock('@/services/novels/story.service', () => ({
   fetchStoriesByIds: vi.fn().mockResolvedValue([{
     id: 'story-1',
     title: 'Test Comic Title',
@@ -33,7 +33,7 @@ vi.mock('@/services/comics/story.service', () => ({
   }]),
 }));
 
-vi.mock('@/services/comics/comicCms.service', () => ({
+vi.mock('@/services/novels/comicCms.service', () => ({
   proxiedR2ImageUrl: (url: string) => url,
 }));
 

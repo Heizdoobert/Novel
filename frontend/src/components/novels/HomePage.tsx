@@ -10,7 +10,7 @@ import {
   Play,
   Eye,
 } from "lucide-react";
-import { ComicContext as Comic } from "@/services/comics/comic.service";
+import { ComicContext as Comic } from "@/services/novels/comic.service";
 import { AdRenderer } from "@/components/reader/AdRenderer";
 import { useHomePagePresenter } from "@/hooks/presenters/useHomePagePresenter";
 import { ROUTES } from "@/lib/constants/routes";

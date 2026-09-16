@@ -33,11 +33,11 @@ vi.mock('@/lib/api/apiClient', () => ({
   apiClient: { get: vi.fn().mockResolvedValue([]) },
 }));
 
-vi.mock('@/services/comics/story.service', () => ({
+vi.mock('@/services/novels/story.service', () => ({
   fetchStoriesPage: vi.fn().mockResolvedValue({ items: [], total: 0 }),
 }));
 
-vi.mock('@/services/comics/comicCms.service', () => ({
+vi.mock('@/services/novels/comicCms.service', () => ({
   proxiedR2ImageUrl: () => null,
 }));
 

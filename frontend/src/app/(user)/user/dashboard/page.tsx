@@ -7,7 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useUser } from "@/hooks/features/use-user";
 import { ROUTES } from "@/lib/constants/routes";
 import { useReadingHistory } from "@/hooks/features/useReadingHistory";
-import { fetchStoriesByIds, fetchStoriesPage } from "@/services/comics/story.service";
+import { fetchStoriesByIds, fetchStoriesPage } from "@/services/novels/story.service";
 
 interface RecommendedItem {
   id: string;

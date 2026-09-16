@@ -1,9 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { HomePage } from '@/components/comics/HomePage';
+import { HomePage } from '@/components/novels/HomePage';
 import { ProfilePageContent } from '@/components/user/ProfilePageContent';
 import { ROUTES } from '@/lib/constants/routes';
-import type { ComicContext as Comic } from '@/services/comics/comic.service';
+import type { ComicContext as Comic } from '@/services/novels/comic.service';
 import type { Chapter } from '@/types/entities';
 
 const state = vi.hoisted(() => ({ push: vi.fn() }));

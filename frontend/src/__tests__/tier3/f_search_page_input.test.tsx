@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { SearchPageContent } from '@/components/comics/SearchPageContent';
+import { SearchPageContent } from '@/components/novels/SearchPageContent';
 import { ROUTES } from '@/lib/constants/routes';
 
 const state = vi.hoisted(() => ({ push: vi.fn() }));
@@ -26,11 +26,11 @@ vi.mock('@/hooks/presenters/useSearchPresenter', () => ({
   }),
 }));
 
-vi.mock('@/components/comics/FilterMenu', () => ({
+vi.mock('@/components/novels/FilterMenu', () => ({
   FilterMenu: () => null,
 }));
 
-vi.mock('@/components/comics/SortDropdown', () => ({
+vi.mock('@/components/novels/SortDropdown', () => ({
   SortDropdown: () => null,
 }));
 
@@ -38,7 +38,7 @@ vi.mock('@/components/navigation/Pagination', () => ({
   Pagination: () => null,
 }));
 
-vi.mock('@/services/comics/comicCms.service', () => ({
+vi.mock('@/services/novels/comicCms.service', () => ({
   proxiedR2ImageUrl: () => null,
 }));
 

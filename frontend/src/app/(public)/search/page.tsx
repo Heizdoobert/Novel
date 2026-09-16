@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { SearchPageContent } from "@/components/comics/SearchPageContent";
+import { SearchPageContent } from "@/components/novels/SearchPageContent";
 
 export const metadata: Metadata = {
   title: "Tìm kiếm truyện - Light Story",

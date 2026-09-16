@@ -254,7 +254,7 @@ describe('Journey 6: Gateway worker contract for R2 upload', () => {
     const fs = await import('node:fs');
     const path = await import('node:path');
     const repoRoot = path.resolve(__dirname, '../../../../');
-    const serviceSource = fs.readFileSync(path.join(repoRoot, 'frontend/src/services/comics/comic.service.ts'), 'utf-8');
+    const serviceSource = fs.readFileSync(path.join(repoRoot, 'frontend/src/services/novels/comic.service.ts'), 'utf-8');
     const adminSource = fs.readFileSync(path.join(repoRoot, 'workers/kv-worker/src/routes/admin.ts'), 'utf-8');
 
     expect(serviceSource).toContain('fetch(`${getGatewayUrl()}${ROUTES.API.ADMIN.R2_UPLOAD_GATEWAY}`');

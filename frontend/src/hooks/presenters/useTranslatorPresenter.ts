@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { fetchTranslators } from '@/services/comics/taxonomy.service';
+import { fetchTranslators } from '@/services/novels/taxonomy.service';
 
 export function useTranslatorPresenter() {
   const translatorsQuery = useQuery({

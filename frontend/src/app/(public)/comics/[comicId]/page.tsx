@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
-import { ComicDetailPageContent } from '@/components/comics/ComicDetailPageContent';
+import { ComicDetailPageContent } from '@/components/novels/ComicDetailPageContent';
 import { getServerSupabase } from '@/lib/supabase/server';
 import { getR2ImageUrl } from '@/lib/utils/image-url';
-import type { ComicContext as Comic } from '@/services/comics/comic.service';
+import type { ComicContext as Comic } from '@/services/novels/comic.service';
 import type { Chapter, Category } from '@/types/entities';
 
 type Props = { params: Promise<{ comicId: string }> };

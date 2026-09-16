@@ -2,14 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { ComicContext as Comic } from "@/services/comics/comic.service";
+import { ComicContext as Comic } from "@/services/novels/comic.service";
 import { getReadingHistory } from "@/services/reader/readerHub.service";
 import { Chapter, Category } from "@/types/entities";
 import { toast } from "sonner";
-import { proxiedR2ImageUrl } from "@/services/comics/comicCms.service";
+import { proxiedR2ImageUrl } from "@/services/novels/comicCms.service";
 
-import { fetchStoryById } from "@/services/comics/story.service";
-import { fetchChaptersByStoryId } from "@/services/comics/chapter.service";
+import { fetchStoryById } from "@/services/novels/story.service";
+import { fetchChaptersByStoryId } from "@/services/novels/chapter.service";
 import { apiClient } from "@/lib/api/apiClient";
 import { getVietnameseStatus } from "@/lib/utils/status-styles";
 

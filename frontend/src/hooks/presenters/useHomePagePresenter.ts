@@ -2,13 +2,13 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { apiClient } from "@/lib/api/apiClient";
-import { ComicContext as Comic } from "@/services/comics/comic.service";
-import { proxiedR2ImageUrl } from "@/services/comics/comicCms.service";
+import { ComicContext as Comic } from "@/services/novels/comic.service";
+import { proxiedR2ImageUrl } from "@/services/novels/comicCms.service";
 import { getReadingHistory, HistoryItem } from "@/services/reader/readerHub.service";
 import { Chapter, Category } from "@/types/entities";
 import { useLanguage } from "@/context/LanguageContext";
 
-import { fetchStoriesPage, fetchStoryById } from "@/services/comics/story.service";
+import { fetchStoriesPage, fetchStoryById } from "@/services/novels/story.service";
 import { applyComicCoverFallback } from "@/lib/utils/image-url";
 
 type HistoryComic = Comic & { chapterNumber?: number; chapterId?: string };

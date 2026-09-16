@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 import { FormEditor } from '@/components/admin/form-editor';
 import { Input } from '@/components/ui/input';
 import { updateComic } from '@/lib/actions/comic.actions';
-import { fetchStoryById } from '@/services/comics/story.service';
+import { fetchStoryById } from '@/services/novels/story.service';
 import { ROUTES } from '@/lib/constants/routes';
 
 export default function AdminEditComicPage({ params }: { params: Promise<{ comicId: string }> }) {

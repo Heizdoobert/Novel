@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { fetchStoriesPage } from "@/services/comics/story.service";
-import { ComicContext as Comic } from "@/services/comics/comic.service";
+import { fetchStoriesPage } from "@/services/novels/story.service";
+import { ComicContext as Comic } from "@/services/novels/comic.service";
 import { toast } from "sonner";
 import { useLanguage } from "@/context/LanguageContext";
 import { getVietnameseStatus } from "@/lib/utils/status-styles";

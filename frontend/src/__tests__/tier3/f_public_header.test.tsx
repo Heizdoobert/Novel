@@ -48,11 +48,11 @@ vi.mock('@/lib/api/apiClient', () => ({
   apiClient: { get: vi.fn(async () => []) },
 }));
 
-vi.mock('@/services/comics/story.service', () => ({
+vi.mock('@/services/novels/story.service', () => ({
   fetchStoriesPage: vi.fn(async () => ({ items: [] })),
 }));
 
-vi.mock('@/services/comics/comicCms.service', () => ({
+vi.mock('@/services/novels/comicCms.service', () => ({
   proxiedR2ImageUrl: (url: string) => url,
 }));
 

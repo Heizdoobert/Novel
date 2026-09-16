@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { getRecommendations } from '@/services/comics/comic.service';
+import { getRecommendations } from '@/services/novels/comic.service';
 
 export function useRecommendations(comicId: string, limit = 6) {
   return useQuery({

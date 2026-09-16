@@ -6,7 +6,7 @@ import { Sparkles, Eye } from 'lucide-react';
 import { useRecommendations } from '@/hooks/features/useRecommendations';
 import { getStatusStyles } from '@/lib/utils/status-styles';
 import { ROUTES } from '@/lib/constants/routes';
-import { proxiedR2ImageUrl } from '@/services/comics/comicCms.service';
+import { proxiedR2ImageUrl } from '@/services/novels/comicCms.service';
 
 type RecommendedComicsProps = {
   comicId: string;

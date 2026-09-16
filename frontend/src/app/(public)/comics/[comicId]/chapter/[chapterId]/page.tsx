@@ -2,7 +2,7 @@ import { ChapterReaderPageContent } from "@/components/reader/ChapterReaderPageC
 import type { ReaderInitialData, ReaderChapterListItem } from "@/hooks/presenters/useReadChapterPresenter";
 import { getGatewayUrl } from "@/lib/utils/gateway-url";
 import { getServerSupabase } from "@/lib/supabase/server";
-import type { ComicContext } from "@/services/comics/comic.service";
+import type { ComicContext } from "@/services/novels/comic.service";
 import type { Chapter } from "@/types/entities";
 
 export const dynamic = "force-dynamic";

@@ -1,7 +1,7 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { Pagination } from '@/components/navigation/Pagination';
-import { SortDropdown } from '@/components/comics/SortDropdown';
+import { SortDropdown } from '@/components/novels/SortDropdown';
 
 const routerState = vi.hoisted(() => ({
   push: vi.fn(),

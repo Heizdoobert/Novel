@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
-import { ComicDetailPageContent } from '@/components/comics/ComicDetailPageContent';
+import { ComicDetailPageContent } from '@/components/novels/ComicDetailPageContent';
 import { ROUTES } from '@/lib/constants/routes';
 import type { Chapter } from '@/types/entities';
 
@@ -23,15 +23,15 @@ vi.mock('@/services/reader/readerHub.service', () => ({
   getReadingHistory: vi.fn(async () => []),
 }));
 
-vi.mock('@/services/comics/chapter.service', () => ({
+vi.mock('@/services/novels/chapter.service', () => ({
   fetchChaptersByStoryId: vi.fn(async () => state.chapters),
 }));
 
-vi.mock('@/services/comics/story.service', () => ({
+vi.mock('@/services/novels/story.service', () => ({
   fetchStoryById: vi.fn(async () => state.comic),
 }));
 
-vi.mock('@/services/comics/comicCms.service', () => ({
+vi.mock('@/services/novels/comicCms.service', () => ({
   proxiedR2ImageUrl: (url: string) => url,
 }));
 
@@ -39,7 +39,7 @@ vi.mock('sonner', () => ({
   toast: { success: vi.fn(), error: vi.fn() },
 }));
 
-vi.mock('@/components/comics/RecommendedComics', () => ({
+vi.mock('@/components/novels/RecommendedComics', () => ({
   RecommendedComics: () => null,
 }));
 
