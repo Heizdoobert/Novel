@@ -28,7 +28,7 @@ const state = vi.hoisted(() => {
 
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: state.push, replace: state.replace }),
-  usePathname: () => '/comics/new',
+  usePathname: () => '/novels/new',
 }));
 
 vi.mock('@/context/AuthContext', () => ({
@@ -173,7 +173,7 @@ describe('F6 x F7: chapter status lifecycle across SQL, entity, and service', ()
       content: '...',
     });
     expect(chapter).toEqual(mockChapter);
-    expect(state.apiClient.post).toHaveBeenCalledWith('/api/comics/c1/chapters', {
+    expect(state.apiClient.post).toHaveBeenCalledWith('/api/novels/c1/chapters', {
       storyId: 's1',
       tenantKey: 'tenant',
       chapterNumber: 1,
@@ -215,7 +215,7 @@ describe('F4 x F5 x F6 x F7: real upload-then-create chain', () => {
     expect(body.getAll('file')).toHaveLength(1);
 
     const comic = await createComic({ title: 'My Comic', description: 'Desc', coverUrl });
-    expect(state.apiClient.post).toHaveBeenCalledWith('/api/comics', {
+    expect(state.apiClient.post).toHaveBeenCalledWith('/api/novels', {
       title: 'My Comic',
       description: 'Desc',
       cover_url: 'https://r2.example/cover.webp',

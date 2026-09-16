@@ -77,7 +77,7 @@ const infraNum = (inf: Record<string, unknown> | null | undefined, key: string):
   (inf?.[key] as number) ?? 0;
 
 export default function AdminDashboardPage() {
-  useRoleGuard(["superadmin", "admin", "employee"], ROUTES.ADMIN.COMICS);
+  useRoleGuard(["superadmin", "admin", "employee"], ROUTES.ADMIN.NOVELS);
   const { t } = useLanguage();
   const [data, setData] = useState<OverviewData>(empty);
   const [loading, setLoading] = useState(true);
@@ -145,7 +145,7 @@ export default function AdminDashboardPage() {
             <Section title={t("dash_quick_actions")}>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                 {([
-                  { href: ROUTES.ADMIN.COMICS, icon: Plus, labelKey: "dash_create_comic" },
+                  { href: ROUTES.ADMIN.NOVELS, icon: Plus, labelKey: "dash_create_comic" },
                   { href: ROUTES.ADMIN.USERS, icon: Users, labelKey: "dash_manage_users" },
                   { href: ROUTES.ADMIN.ANALYTICS, icon: BarChart3, labelKey: "dash_view_analytics" },
                   { href: ROUTES.ADMIN.SETTINGS, icon: Settings, labelKey: "dash_system_settings" },

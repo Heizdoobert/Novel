@@ -4,12 +4,12 @@ export const ROUTES = {
   REGISTER: "/auth/register",
   FORGET_PASSWORD: "/auth/forgetPassword",
   RESET_PASSWORD: "/auth/reset-password",
-  COMICS: "/comics",
+  NOVELS: "/novels",
   SEARCH: "/search",
   GENRES: "/genres",
-  COMIC_DETAIL: (id: string) => `/comics/${id}`,
-  CHAPTER_READER: (comicId: string, chapterId: string) =>
-    `/comics/${comicId}/chapter/${chapterId}`,
+  NOVEL_DETAIL: (id: string) => `/novels/${id}`,
+  CHAPTER_READER: (novelId: string, chapterId: string) =>
+    `/novels/${novelId}/chapter/${chapterId}`,
   PLACEHOLDER_COVER:
     "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='400'%3E%3Crect width='100%25' height='100%25' fill='%231e293b'/%3E%3Ctext x='50%25' y='50%25' fill='%2364748b' font-family='sans-serif' font-size='18' text-anchor='middle' dominant-baseline='middle'%3ENo Cover%3C/text%3E%3C/svg%3E",
   GROUP: "/group",
@@ -24,7 +24,7 @@ export const ROUTES = {
   ADMIN: {
     ROOT: "/admin",
     DASHBOARD: "/admin/dashboard",
-    COMICS: "/admin/comics",
+    NOVELS: "/admin/novels",
     CHAPTERS: "/admin/chapters",
     USERS: "/admin/users",
     CATEGORIES: "/admin/categories",
@@ -52,13 +52,13 @@ export const ROUTES = {
     R2_PROXY: "/api/r2/proxy",
     R2_UPLOAD: "/api/r2/upload",
     WEBHOOKS_SUPABASE: "/api/webhooks/supabase",
-    COMICS: "/api/comics",
-    COMIC: (id: string) => `/api/comics/${id}`,
-    COMIC_CHAPTERS: (comicId: string) => `/api/comics/${comicId}/chapters`,
-    COMICS_RECOMMENDATIONS: (comicId: string, limit: number) =>
-      `/api/comics/recommendations?comicId=${encodeURIComponent(comicId)}&limit=${limit}`,
-    COMICS_MOST_VIEWED: (limit: number) =>
-      `/api/comics?sort=most_viewed&limit=${limit}`,
+    NOVELS: "/api/novels",
+    NOVEL: (id: string) => `/api/novels/${id}`,
+    NOVEL_CHAPTERS: (novelId: string) => `/api/novels/${novelId}/chapters`,
+    NOVELS_RECOMMENDATIONS: (novelId: string, limit: number) =>
+      `/api/novels/recommendations?novelId=${encodeURIComponent(novelId)}&limit=${limit}`,
+    NOVELS_MOST_VIEWED: (limit: number) =>
+      `/api/novels?sort=most_viewed&limit=${limit}`,
     STORIES: "/api/stories",
     STORY: (id: string) => `/api/stories/${id}`,
     STORIES_VIEWS: "/api/stories/views",
@@ -76,11 +76,11 @@ export const ROUTES = {
       HISTORY: "/api/user/history",
     },
     ADMIN: {
-      COMICS: "/api/admin/comics",
-      COMICS_PAGE: (pageSize: number) => `/api/admin/comics?pageSize=${pageSize}`,
-      COMIC: (id: string) => `/api/admin/comics/${id}`,
-      COMIC_CHAPTER: (comicId: string, chapterId: string) =>
-        `/api/admin/comics/${comicId}/chapters/${chapterId}`,
+      NOVELS: "/api/admin/novels",
+      NOVELS_PAGE: (pageSize: number) => `/api/admin/novels?pageSize=${pageSize}`,
+      NOVEL: (id: string) => `/api/admin/novels/${id}`,
+      NOVEL_CHAPTER: (novelId: string, chapterId: string) =>
+        `/api/admin/novels/${novelId}/chapters/${chapterId}`,
       CHAPTERS: "/api/admin/chapters",
       CHAPTER_IMAGES: (chapterId: string) =>
         `/api/admin/chapters/${chapterId}/images`,

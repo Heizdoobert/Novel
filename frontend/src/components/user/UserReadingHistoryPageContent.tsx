@@ -47,7 +47,7 @@ export const UserReadingHistoryPageContent: React.FC = () => {
             Các chương truyện bạn xem qua sẽ được lưu lại tự động tại đây để tiện theo dõi.
           </p>
           <Link
-            href={ROUTES.COMICS}
+            href={ROUTES.NOVELS}
             className="inline-block mt-5 px-6 py-2.5 bg-primary text-white font-bold text-sm rounded-xl shadow-md hover:bg-primary/90 transition-all"
           >
             Đọc ngay
@@ -62,7 +62,7 @@ export const UserReadingHistoryPageContent: React.FC = () => {
             >
               <div className="flex items-center gap-4 min-w-0">
                 <div className="min-w-0">
-                  <Link href={ROUTES.COMIC_DETAIL(item.comicId)}>
+                  <Link href={ROUTES.NOVEL_DETAIL(item.comicId)}>
                     <h3 className="font-bold text-base text-slate-900 dark:text-white truncate hover:text-primary transition-colors">
                       Truyện {item.comicId.slice(0, 8)}
                     </h3>

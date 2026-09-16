@@ -161,7 +161,7 @@ export const QuickSearchModal: React.FC<Props> = ({ isOpen, onClose }) => {
                         role="option"
                         aria-selected={false}
                         onClick={() => {
-                          router.push(ROUTES.COMIC_DETAIL(comic.id));
+                          router.push(ROUTES.NOVEL_DETAIL(comic.id));
                           onClose();
                         }}
                         className="w-full flex items-center gap-3 p-3 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors text-left"

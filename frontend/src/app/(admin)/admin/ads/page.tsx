@@ -8,7 +8,7 @@ import { useRoleGuard } from "@/hooks/common/use-role-guard";
 import { ROUTES } from "@/lib/constants/routes";
 
 export default function AdminAdsPage() {
-  useRoleGuard(["superadmin", "admin"], ROUTES.ADMIN.COMICS);
+  useRoleGuard(["superadmin", "admin"], ROUTES.ADMIN.NOVELS);
   const {
     ads,
     saving,

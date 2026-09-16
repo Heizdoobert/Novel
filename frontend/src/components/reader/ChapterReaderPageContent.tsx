@@ -90,7 +90,7 @@ export const ChapterReaderPageContent: React.FC<ChapterReaderPageContentProps> =
 
       <div className="max-w-4xl mx-auto w-full px-4 py-8 text-center flex-shrink-0">
         <Link
-          href={ROUTES.COMIC_DETAIL(comicId)}
+          href={ROUTES.NOVEL_DETAIL(comicId)}
           className="inline-block text-xl sm:text-2xl font-black text-slate-900 dark:text-white hover:text-primary transition-colors mb-2"
         >
           <h1 className="inline">{comic?.title || "Tên Truyện Đang Cập Nhật"}</h1>

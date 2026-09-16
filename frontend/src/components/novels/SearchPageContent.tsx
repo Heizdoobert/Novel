@@ -210,7 +210,7 @@ export const SearchPageContent: React.FC<{ initialCategory?: string }> = ({
               {comics.map((comic, i) => (
                 <Link
                   key={comic.id}
-                  href={ROUTES.COMIC_DETAIL(comic.id)}
+                  href={ROUTES.NOVEL_DETAIL(comic.id)}
                   className="block outline-none cursor-pointer w-full max-w-[180px]"
                 >
                   <motion.div

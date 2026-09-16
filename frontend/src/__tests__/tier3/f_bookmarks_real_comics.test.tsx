@@ -91,7 +91,7 @@ describe('UserBookmarksPageContent', () => {
     render(<UserBookmarksPageContent />, { wrapper: createWrapper() });
     await waitFor(() => {
       const links = screen.getAllByRole('link');
-      const comicLink = links.find(l => l.getAttribute('href') === ROUTES.COMIC_DETAIL('story-1'));
+      const comicLink = links.find(l => l.getAttribute('href') === ROUTES.NOVEL_DETAIL('story-1'));
       expect(comicLink).toBeDefined();
     });
   });
@@ -137,6 +137,6 @@ describe('UserBookmarksPageContent empty state', () => {
 
     render(<UserBookmarksPageContent />, { wrapper: createWrapper() });
     const cta = screen.getByRole('link', { name: /bookmarks_empty_cta/ });
-    expect(cta).toHaveAttribute('href', ROUTES.COMICS);
+    expect(cta).toHaveAttribute('href', ROUTES.NOVELS);
   });
 });

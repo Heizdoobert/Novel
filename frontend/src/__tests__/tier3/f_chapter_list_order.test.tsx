@@ -103,7 +103,7 @@ describe('ComicDetailPageContent chapter ordering (regression guard)', () => {
 
   it('server page queries chapters ordered by chapter_number ascending (hydration path)', () => {
     const page = readFileSync(
-      path.join(process.cwd(), 'src/app/(public)/comics/[comicId]/page.tsx'),
+      path.join(process.cwd(), 'src/app/(public)/novels/[comicId]/page.tsx'),
       'utf8',
     );
     expect(page).toContain(".order('chapter_number', { ascending: true })");

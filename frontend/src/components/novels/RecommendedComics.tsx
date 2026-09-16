@@ -37,7 +37,7 @@ export const RecommendedComics: React.FC<RecommendedComicsProps> = ({ comicId })
         ) : recommendations.map((comic) => (
           <Link
             key={comic.id}
-            href={ROUTES.COMIC_DETAIL(comic.id)}
+            href={ROUTES.NOVEL_DETAIL(comic.id)}
             className="group relative flex flex-col bg-white dark:bg-slate-900 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 border border-slate-100 dark:border-slate-800/80"
           >
             <div className="relative aspect-[3/4] w-full overflow-hidden bg-slate-100 dark:bg-slate-800">

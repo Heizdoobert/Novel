@@ -49,7 +49,7 @@ export default function AdminEditComicPage({ params }: { params: Promise<{ comic
       const res = await updateComic(comicId, { title, author, description });
       if (res.success) {
         toast.success('Lưu truyện thành công');
-        router.push(ROUTES.ADMIN.COMICS);
+        router.push(ROUTES.ADMIN.NOVELS);
         return;
       }
       toast.error(res.error || 'Lưu truyện thất bại');

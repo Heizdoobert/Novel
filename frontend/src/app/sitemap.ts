@@ -16,7 +16,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   const staticRoutes: MetadataRoute.Sitemap = [
     { url: `${BASE_URL}`, lastModified: new Date(), changeFrequency: 'daily', priority: 1 },
-    { url: `${BASE_URL}${ROUTES.COMICS}`, lastModified: new Date(), changeFrequency: 'daily', priority: 0.9 },
+    { url: `${BASE_URL}${ROUTES.NOVELS}`, lastModified: new Date(), changeFrequency: 'daily', priority: 0.9 },
   ];
 
   let comicRoutes: MetadataRoute.Sitemap = [];
@@ -31,7 +31,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
       if (stories) {
         comicRoutes = stories.map((story) => ({
-          url: `${BASE_URL}${ROUTES.COMIC_DETAIL(story.id)}`,
+          url: `${BASE_URL}${ROUTES.NOVEL_DETAIL(story.id)}`,
           lastModified: story.updated_at ? new Date(story.updated_at) : new Date(),
           changeFrequency: 'daily' as const,
           priority: 0.8,

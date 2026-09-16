@@ -190,7 +190,7 @@ export async function uploadChapterImages(images: File[], comicId?: string, chap
 }
 
 export async function createComic(input: CreateComicInput): Promise<ComicContext> {
-  const result = await apiClient.post<ComicContext[] | { comic?: ComicContext }>(ROUTES.API.COMICS, {
+  const result = await apiClient.post<ComicContext[] | { comic?: ComicContext }>(ROUTES.API.NOVELS, {
     title: input.title,
     description: input.description,
     cover_url: input.coverUrl,
@@ -204,7 +204,7 @@ export async function createComic(input: CreateComicInput): Promise<ComicContext
 }
 
 export async function createComicChapter(input: ChapterCreateInput): Promise<ChapterCreateResponse['chapter']> {
-  const result = await apiClient.post<ChapterCreateResponse['chapter'][] | { chapter?: ChapterCreateResponse['chapter'] }>(ROUTES.API.COMIC_CHAPTERS(input.comicId), {
+  const result = await apiClient.post<ChapterCreateResponse['chapter'][] | { chapter?: ChapterCreateResponse['chapter'] }>(ROUTES.API.NOVEL_CHAPTERS(input.comicId), {
     storyId: input.storyId,
     tenantKey: input.tenantKey,
     chapterNumber: input.chapterNumber,
@@ -218,10 +218,10 @@ export async function createComicChapter(input: ChapterCreateInput): Promise<Cha
 
 export async function getRecommendations(comicId: string, limit = 6): Promise<ComicContext[]> {
   try {
-    const res = await apiClient.get<ComicContext[]>(ROUTES.API.COMICS_RECOMMENDATIONS(comicId, limit));
+    const res = await apiClient.get<ComicContext[]>(ROUTES.API.NOVELS_RECOMMENDATIONS(comicId, limit));
     return Array.isArray(res) ? res : [];
   } catch {
-    const fallback = await apiClient.get<any>(ROUTES.API.COMICS_MOST_VIEWED(limit)).catch(() => []);
+    const fallback = await apiClient.get<any>(ROUTES.API.NOVELS_MOST_VIEWED(limit)).catch(() => []);
     return Array.isArray(fallback) ? fallback : fallback?.items || fallback?.comics || [];
   }
 }

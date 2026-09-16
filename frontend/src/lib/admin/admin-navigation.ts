@@ -64,7 +64,7 @@ export const ADMIN_MENU_ITEMS: AdminMenuItem[] = [
   {
     id: "comics",
     label: "Quản lý Truyện",
-    href: ROUTES.ADMIN.COMICS,
+    href: ROUTES.ADMIN.NOVELS,
     icon: BookOpen,
     roles: ["superadmin", "admin", "employee"],
   },

@@ -92,7 +92,7 @@ export const HomePage: React.FC<HomePageProps> = ({
           <div className="absolute inset-0 bg-gradient-to-br from-orange-500 via-amber-600 to-slate-950 dark:from-[#001eff] dark:via-[#8900ff] dark:to-slate-950" />
           <div className="relative flex flex-col sm:flex-row gap-5 sm:gap-8 p-5 sm:p-8 items-center">
             <Link
-              href={ROUTES.COMIC_DETAIL(spotlight.id)}
+              href={ROUTES.NOVEL_DETAIL(spotlight.id)}
               className="relative w-32 min-[400px]:w-36 sm:w-44 lg:w-52 shrink-0 rounded-2xl overflow-hidden border-4 border-white/20 dark:border-white/10 shadow-2xl rotate-2 hover:rotate-0 transition-transform duration-300"
             >
               <img
@@ -132,7 +132,7 @@ export const HomePage: React.FC<HomePageProps> = ({
               </div>
               <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 sm:gap-3">
                 <Link
-                  href={ROUTES.COMIC_DETAIL(spotlight.id)}
+                  href={ROUTES.NOVEL_DETAIL(spotlight.id)}
                   className="inline-flex items-center gap-1.5 sm:gap-2 px-4 sm:px-5 py-2 sm:py-2.5 rounded-full bg-white text-slate-900 text-xs sm:text-sm font-black shadow-lg hover:scale-105 transition-transform"
                 >
                   <Play size={16} className="fill-current" />
@@ -163,7 +163,7 @@ export const HomePage: React.FC<HomePageProps> = ({
             {restOfTrending.map((comic) => (
               <Link
                 key={`trending-${comic.id}`}
-                href={ROUTES.COMIC_DETAIL(comic.id)}
+                href={ROUTES.NOVEL_DETAIL(comic.id)}
                 className="group relative w-32 sm:w-40 flex-shrink-0 outline-none block"
               >
                 <div className="relative overflow-hidden rounded-xl aspect-[3/4] bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-white/10 group-hover:border-orange-500 dark:group-hover:border-accent transition-colors">
@@ -273,7 +273,7 @@ export const HomePage: React.FC<HomePageProps> = ({
                     className="flex gap-3 p-2.5 border border-slate-100 dark:border-white/10 rounded-xl hover:border-orange-500 dark:hover:border-accent hover:shadow-md transition-all dark:bg-slate-950/60"
                   >
                     <Link
-                      href={ROUTES.COMIC_DETAIL(comic.id)}
+                      href={ROUTES.NOVEL_DETAIL(comic.id)}
                       className="relative w-16 h-[88px] sm:w-20 sm:h-28 flex-shrink-0 overflow-hidden rounded-lg bg-slate-100 dark:bg-black"
                     >
                       <img
@@ -291,7 +291,7 @@ export const HomePage: React.FC<HomePageProps> = ({
                     <div className="flex-1 min-w-0 flex flex-col justify-between py-0.5">
                       <div>
                         <Link
-                          href={ROUTES.COMIC_DETAIL(comic.id)}
+                          href={ROUTES.NOVEL_DETAIL(comic.id)}
                           className="font-bold text-sm text-slate-800 dark:text-white hover:text-orange-500 dark:hover:text-accent transition-colors line-clamp-1"
                         >
                           {comic.title}
@@ -325,7 +325,7 @@ export const HomePage: React.FC<HomePageProps> = ({
               {(comics.length > 0 ? (trendingComics.length > 0 ? trendingComics : comics) : []).slice(0, 10).map((comic, idx) => (
                 <Link
                   key={`top-${comic.id}`}
-                  href={ROUTES.COMIC_DETAIL(comic.id)}
+                  href={ROUTES.NOVEL_DETAIL(comic.id)}
                   className="flex items-center gap-3 px-4 py-2.5 hover:bg-slate-50 dark:hover:bg-[#000b13] transition-colors group"
                 >
                   <span

@@ -42,7 +42,7 @@ export default function ComicDetailError({
           <Button onClick={reset} className="gap-2 font-bold">
             <RotateCcw size={16} /> Thử Lại
           </Button>
-          <Link href={ROUTES.COMICS}>
+          <Link href={ROUTES.NOVELS}>
             <Button variant="outline" className="gap-2 font-bold">
               <ArrowLeft size={16} /> Danh Sách Truyện
             </Button>

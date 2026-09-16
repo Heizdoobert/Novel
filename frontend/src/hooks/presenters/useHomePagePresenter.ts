@@ -98,7 +98,7 @@ export function useHomePagePresenter(
             const comicIds = comicsData.map((c: any) => c.id).join(",");
             let chapters: any[] = [];
             try {
-              const batchRes = await apiClient.get<any>(`/api/comics/chapters/batch?comicIds=${comicIds}`);
+              const batchRes = await apiClient.get<any>(`/api/novels/chapters/batch?comicIds=${comicIds}`);
               chapters = Array.isArray(batchRes) ? batchRes : batchRes?.chapters || [];
             } catch {
               // Chapters fetch failed silently

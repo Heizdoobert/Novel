@@ -114,14 +114,14 @@ describe('uploadComicCover', () => {
 });
 
 describe('createComic', () => {
-  it('sends POST to /api/comics and returns comic', async () => {
+  it('sends POST to /api/novels and returns comic', async () => {
     mockApiClient.post.mockResolvedValue({ comic: { id: 'c1', title: 'Test' } });
 
     const { createComic } = await import('./comic.service');
     const result = await createComic({ title: 'Test', description: 'Desc', coverUrl: 'https://img.test' });
 
     expect(result.title).toBe('Test');
-    expect(mockApiClient.post).toHaveBeenCalledWith('/api/comics', {
+    expect(mockApiClient.post).toHaveBeenCalledWith('/api/novels', {
       title: 'Test',
       description: 'Desc',
       cover_url: 'https://img.test',
@@ -133,11 +133,11 @@ describe('createComic', () => {
 });
 
 describe('getRecommendations', () => {
-  it('calls /api/comics/recommendations with parameters', async () => {
+  it('calls /api/novels/recommendations with parameters', async () => {
     mockApiClient.get.mockResolvedValue([{ id: 'rec-1', title: 'Rec Comic' }]);
     const { getRecommendations } = await import('./comic.service');
     const result = await getRecommendations('comic-1', 6);
     expect(result).toHaveLength(1);
-    expect(mockApiClient.get).toHaveBeenCalledWith('/api/comics/recommendations?comicId=comic-1&limit=6');
+    expect(mockApiClient.get).toHaveBeenCalledWith('/api/novels/recommendations?novelId=comic-1&limit=6');
   });
 });

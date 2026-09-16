@@ -14,7 +14,7 @@ const mocks = vi.hoisted(() => {
       role: undefined as string | undefined,
       loading: false as boolean,
     },
-    mockPathname: '/comics/create',
+    mockPathname: '/novels/create',
   };
 });
 
@@ -60,7 +60,7 @@ describe('Journey 2: Role-based route protection', () => {
         <div>Admin Panel</div>
       </RoleProtectedRoute>,
     );
-    expect(mocks.mockReplace).toHaveBeenCalledWith('/handle-exception/401?from=%2Fcomics%2Fcreate');
+    expect(mocks.mockReplace).toHaveBeenCalledWith('/handle-exception/401?from=%2Fnovels%2Fcreate');
     expect(screen.queryByText('Admin Panel')).not.toBeInTheDocument();
   });
 
@@ -72,7 +72,7 @@ describe('Journey 2: Role-based route protection', () => {
         <div>Admin Panel</div>
       </RoleProtectedRoute>,
     );
-    expect(mocks.mockReplace).toHaveBeenCalledWith('/handle-exception/403?from=%2Fcomics%2Fcreate');
+    expect(mocks.mockReplace).toHaveBeenCalledWith('/handle-exception/403?from=%2Fnovels%2Fcreate');
     expect(screen.queryByText('Admin Panel')).not.toBeInTheDocument();
   });
 

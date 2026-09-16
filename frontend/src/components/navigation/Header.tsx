@@ -268,7 +268,7 @@ export const Header: React.FC<HeaderProps> = ({
                     {searchResults.map((comic) => (
                       <Link
                         key={`search-res-${comic.id}`}
-                        href={ROUTES.COMIC_DETAIL(comic.id)}
+                        href={ROUTES.NOVEL_DETAIL(comic.id)}
                         onClick={() => setShowResults(false)}
                         className="flex items-center gap-3 p-2.5 hover:bg-slate-50 dark:hover:bg-[#000b13] transition-colors group"
                       >

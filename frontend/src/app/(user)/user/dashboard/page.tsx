@@ -129,7 +129,7 @@ export default function UserDashboardPage() {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {recommended.map((rec) => (
-              <Link key={rec.id} href={ROUTES.COMIC_DETAIL(rec.id)}>
+              <Link key={rec.id} href={ROUTES.NOVEL_DETAIL(rec.id)}>
                 {/* ponytail: latestChapter line removed — Story has no latest-chapter field; render path was dead. */}
                 <Card className="p-4 hover:border-primary transition-all cursor-pointer">
                   <h3 className="font-bold text-sm text-slate-900 dark:text-white">

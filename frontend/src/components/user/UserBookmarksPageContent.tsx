@@ -59,7 +59,7 @@ export const UserBookmarksPageContent: React.FC = () => {
           {t("bookmarks_empty_description")}
         </p>
         <Link
-          href={ROUTES.COMICS}
+          href={ROUTES.NOVELS}
           className="inline-block mt-5 px-6 py-2.5 bg-primary text-white font-bold text-sm rounded-xl shadow-md hover:bg-primary/90 transition-all"
         >
           {t("bookmarks_empty_cta")}
@@ -74,7 +74,7 @@ export const UserBookmarksPageContent: React.FC = () => {
             key={comic.id}
             className="group relative bg-white dark:bg-slate-900 rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 shadow-sm transition-all hover:border-primary/50 flex flex-col"
           >
-            <Link href={ROUTES.COMIC_DETAIL(comic.id)} className="block relative aspect-[3/4] overflow-hidden bg-slate-100 dark:bg-slate-800">
+            <Link href={ROUTES.NOVEL_DETAIL(comic.id)} className="block relative aspect-[3/4] overflow-hidden bg-slate-100 dark:bg-slate-800">
               <img
                 src={proxiedR2ImageUrl(comic.cover_url || "") || "https://placehold.co/400x600/png?text=No+Cover"}
                 alt={comic.title}
@@ -94,7 +94,7 @@ export const UserBookmarksPageContent: React.FC = () => {
               </div>
             </Link>
             <div className="p-3 flex flex-col flex-1 justify-between">
-              <Link href={ROUTES.COMIC_DETAIL(comic.id)}>
+              <Link href={ROUTES.NOVEL_DETAIL(comic.id)}>
                 <h3 className="font-bold text-sm text-slate-900 dark:text-white line-clamp-1 group-hover:text-primary transition-colors">
                   {comic.title}
                 </h3>
