@@ -257,7 +257,7 @@ export async function handleNovelRecommendations(
   env: Env,
   token: string | null,
 ): Promise<Response> {
-  const comicId = url.searchParams.get('comicId');
+  const comicId = url.searchParams.get('novelId');
   const limitStr = url.searchParams.get('limit') || '6';
   const limit = parseInt(limitStr, 10) || 6;
 

@@ -47,7 +47,7 @@ export default function AdminChaptersPage() {
             Quản Lý Các Chương Truyện
           </h1>
           <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-            Quản lý, tạo chương mới và tải ảnh trang đọc trực tiếp lên Cloudflare R2
+            Quản lý, tạo chương mới và tải tệp nội dung chương trực tiếp lên Cloudflare R2
           </p>
         </div>
         <div className="flex items-center gap-3">

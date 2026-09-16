@@ -76,7 +76,7 @@ describe('GET /novels/recommendations', () => {
       return Response.json([]);
     });
 
-    const url = new URL('https://gateway.test/api/novels/recommendations?comicId=abc&select=*');
+    const url = new URL('https://gateway.test/api/novels/recommendations?novelId=abc&select=*');
     const res = await handleNovelRecommendations(url, env, null);
 
     expect(res.status).toBe(400);
