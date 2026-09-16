@@ -2,9 +2,6 @@ import { ChapterReaderPageContent } from "@/components/reader/ChapterReaderPageC
 import type { ReaderInitialData, ReaderChapterListItem } from "@/hooks/presenters/useReadChapterPresenter";
 import { getGatewayUrl } from "@/lib/utils/gateway-url";
 import { getServerSupabase } from "@/lib/supabase/server";
-import { decryptFieldClient } from "@/lib/security/encryption";
-import { parseChapterContent } from "@/lib/r2/chapter-content";
-import { proxiedR2ImageUrl } from "@/services/comics/comicCms.service";
 import type { ComicContext } from "@/services/comics/comic.service";
 import type { Chapter } from "@/types/entities";
 
@@ -56,7 +53,7 @@ async function loadReaderData(
 
   if (!current) {
     const detail = await fetchGatewayData<any>(
-      `/api/comics/${comicId}/chapters/${chapterId}`,
+      `/api/novels/${comicId}/chapters/${chapterId}`,
     );
     current =
       Array.isArray(detail) ? detail[0] : detail?.chapter ?? detail ?? null;
@@ -72,36 +69,16 @@ async function loadReaderData(
         current ? Promise.resolve(null) : sb.from("chapters").select("*").eq("id", chapterId).maybeSingle(),
       ]);
       if (!story && storyRes?.data) {
-        // gateway and supabase row shapes are near-identical; loose cast mirrors the client fallback
         story = storyRes.data as unknown as ComicContext;
       }
       if (!current && chapterRes?.data) current = chapterRes.data as Chapter;
     }
   }
 
-  if (!current) {
-    return {
-      comic: story,
-      allChapters: sanitizeChapterList(sorted),
-      currentChapter: null,
-      images: [],
-      requiresCbzUnpack: false,
-    };
-  }
-
-  const content =
-    typeof current.content === "string" && current.content.startsWith("ENCv1:")
-      ? await decryptFieldClient(current.content)
-      : current.content;
-
-  const parsed = parseChapterContent(content);
-
   return {
     comic: story,
     allChapters: sanitizeChapterList(sorted),
     currentChapter: current,
-    images: parsed.isCbz ? [] : parsed.imageUrls.map(proxiedR2ImageUrl),
-    requiresCbzUnpack: parsed.isCbz,
   };
 }
 
