@@ -1,0 +1,443 @@
+"use client";
+
+import Link from "next/link";
+import { Plus, Edit, Trash2, Search, BookOpen, Layers } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import dynamic from "next/dynamic";
+const ImageUploader = dynamic(() => import("@/components/admin/image-uploader"), {
+  ssr: false,
+});
+import { getR2ImageUrl } from "@/lib/utils/image-url";
+import { ROUTES } from "@/lib/constants/routes";
+import { useAdminComics } from "@/hooks/features/use-admin-comics";
+import { useAdminFormOptions } from "@/hooks/features/use-admin-form-options";
+import { Modal } from "@/components/ui/modal";
+
+export default function AdminComicsPage() {
+  const {
+    comics,
+    loading,
+    search,
+    setSearch,
+    statusFilter,
+    setStatusFilter,
+    categoryFilter,
+    setCategoryFilter,
+    isModalOpen,
+    setIsModalOpen,
+    editingComic,
+    title,
+    setTitle,
+    authorId,
+    setAuthorId,
+    setAuthor,
+    translatorId,
+    setTranslatorId,
+    setTranslator,
+    categorySet,
+    setCategorySet,
+    tagSet,
+    setTagSet,
+    description,
+    setDescription,
+    status,
+    setStatus,
+    coverUrl,
+    setCoverUrl,
+    submitting,
+    handleOpenCreateModal,
+    handleOpenEditModal,
+    handleSaveComic,
+    handleDeleteComic,
+  } = useAdminComics();
+  const { categories, tags, authors, translators, loading: optionsLoading } = useAdminFormOptions();
+  const optionsEmpty = authors.length === 0 && translators.length === 0;
+  const canSaveComic = !submitting && !optionsLoading && !optionsEmpty && categories.length > 0;
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-black text-slate-900 dark:text-slate-100 flex items-center gap-2">
+            <BookOpen className="text-orange-500" size={28} />
+            Quản Lý Danh Sách Truyện
+          </h1>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+            Quản lý, thêm mới, cập nhật ảnh bìa R2 và xóa các bộ truyện trên hệ thống
+          </p>
+        </div>
+        <Button onClick={handleOpenCreateModal} className="gap-2 bg-orange-500 hover:bg-orange-600 font-bold shrink-0">
+          <Plus size={18} /> Thêm Truyện Mới
+        </Button>
+      </div>
+
+      {/* Filter & Search Bar */}
+      <div className="flex flex-col sm:flex-row items-center gap-3 bg-slate-100 dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800">
+        <div className="relative flex-1 w-full">
+          <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+          <input
+            type="text"
+            placeholder="Tìm kiếm tên truyện, tác giả..."
+            aria-label="Tìm kiếm truyện"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl pl-10 pr-4 py-2 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-orange-500"
+          />
+        </div>
+
+        <label className="sr-only" htmlFor="comic-status-filter">Lọc theo trạng thái</label>
+        <select
+          id="comic-status-filter"
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+          className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-orange-500 cursor-pointer shrink-0"
+        >
+          <option value="all">Tất cả trạng thái</option>
+          <option value="published">Đã xuất bản (Published)</option>
+          <option value="ongoing">Đang tiến hành (Ongoing)</option>
+          <option value="completed">Đã hoàn thành (Completed)</option>
+          <option value="draft">Bản nháp (Draft)</option>
+        </select>
+
+        {categoryFilter.size > 0 && (
+          <button
+            onClick={() => setCategoryFilter(new Set())}
+            className="text-[10px] font-bold text-red-400 hover:text-red-500 shrink-0 transition-colors"
+          >
+            Xóa bộ lọc
+          </button>
+        )}
+      </div>
+
+      {categories.length > 0 && (
+        <div className="flex flex-wrap gap-1.5 bg-slate-100 dark:bg-slate-900 p-3 rounded-2xl border border-slate-200 dark:border-slate-800 -mt-3">
+          {categories.map((cat) => (
+            <button
+              key={cat.id}
+              onClick={() => {
+                const newSet = new Set(categoryFilter);
+                if (newSet.has(cat.name)) newSet.delete(cat.name);
+                else newSet.add(cat.name);
+                setCategoryFilter(newSet);
+              }}
+              className={`px-2.5 py-1 rounded-lg text-[10px] font-bold border transition-colors ${
+                categoryFilter.has(cat.name)
+                  ? "bg-orange-500/20 border-orange-500 text-orange-400"
+                  : "bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-700"
+              }`}
+            >
+              {cat.name}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Comics Table */}
+      <div className="bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white rounded-2xl overflow-hidden shadow-xl">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-xs">
+            <thead className="bg-slate-50 dark:bg-slate-950 text-slate-500 dark:text-slate-400 uppercase tracking-wider font-semibold border-b border-slate-200 dark:border-slate-800">
+              <tr>
+                <th className="p-4">Ảnh Bìa R2</th>
+                <th className="p-4">Tên Truyện</th>
+                <th className="p-4">Tác Giả</th>
+                <th className="p-4">Thể Loại</th>
+                <th className="p-4">Tag</th>
+                <th className="p-4">Lượt Xem</th>
+                <th className="p-4">Trạng Thái</th>
+                <th className="p-4 text-right">Thao Tác</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-200 dark:divide-slate-800/60">
+              {comics.length > 0 ? (
+                comics.map((comic) => (
+                  <tr key={comic.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
+                    <td className="p-4">
+                      <img
+                        src={getR2ImageUrl(comic.cover_url)}
+                        alt={comic.title}
+                        width={48}
+                        height={64}
+                        loading="lazy"
+                        decoding="async"
+                        className="w-12 h-16 rounded-lg object-cover border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-950"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = ROUTES.PLACEHOLDER_COVER;
+                        }}
+                      />
+                    </td>
+                    <td className="p-4 font-bold text-slate-900 dark:text-white max-w-xs truncate">{comic.title}</td>
+                    <td className="p-4 text-slate-600 dark:text-slate-300">{comic.author || "Chưa cập nhật"}</td>
+                    <td className="p-4">
+                      <span className="px-2 py-1 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-medium">
+                        {comic.category || "Chưa cập nhật"}
+                      </span>
+                    </td>
+                    <td className="p-4">
+                      {comic.tags ? (
+                        <div className="flex flex-wrap gap-1">
+                          {comic.tags.split(",").map((tag, i) => (
+                            <span key={i} className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-purple-500/20 text-purple-400">
+                              {tag.trim()}
+                            </span>
+                          ))}
+                        </div>
+                      ) : (
+                        <span className="text-slate-400 dark:text-slate-500 text-[10px]">—</span>
+                      )}
+                    </td>
+                    <td className="p-4 font-semibold text-orange-400">
+                      {comic.views?.toLocaleString() || 0}
+                    </td>
+                    <td className="p-4">
+                      <Badge
+                        variant={
+                          comic.status === "completed"
+                            ? "success"
+                            : comic.status === "published"
+                            ? "default"
+                            : "default"
+                        }
+                      >
+                        {comic.status}
+                      </Badge>
+                    </td>
+                    <td className="p-4 text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        <Link href={`${ROUTES.ADMIN.CHAPTERS}?comicId=${comic.id}`}>
+                          <Button size="sm" variant="outline" className="gap-1 text-xs" title="Quản lý chương">
+                            <Layers size={14} /> Chương
+                          </Button>
+                        </Link>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleOpenEditModal(comic)}
+                          title="Sửa truyện"
+                        >
+                          <Edit size={14} />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="danger"
+                          onClick={() => handleDeleteComic(comic.id, comic.title)}
+                          title="Xóa truyện"
+                        >
+                          <Trash2 size={14} />
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={8} className="p-8 text-center text-slate-500 dark:text-slate-400">
+                    {loading ? "Đang tải danh sách truyện..." : "Không tìm thấy bộ truyện nào."}
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Create / Edit Modal */}
+      <Modal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        variant="dark"
+        className="max-w-xl"
+        title={editingComic ? "Chỉnh Sửa Bộ Truyện" : "Thêm Bộ Truyện Mới"}
+      >
+        <form onSubmit={handleSaveComic} className="space-y-4">
+              <div>
+                <label htmlFor="comic-title" className="block text-xs font-semibold text-slate-300 mb-1">Tên Truyện *</label>
+                <input
+                  id="comic-title"
+                  type="text"
+                  required
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="Nhập tên truyện..."
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-orange-500"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="comic-author" className="block text-xs font-semibold text-slate-300 mb-1">
+                  Tác Giả / Dịch Giả * <span className="text-slate-500 font-normal">(bắt buộc chọn 1)</span>
+                </label>
+                <div className="grid grid-cols-2 gap-4">
+                  <select
+                    id="comic-author"
+                    value={authorId}
+                    onChange={(e) => {
+                      const opt = authors.find((a) => a.id === e.target.value);
+                      setAuthorId(e.target.value);
+                      setAuthor(opt?.name ?? "");
+                    }}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-orange-500"
+                  >
+                    <option value="">Tác giả...</option>
+                    {authors.map((a) => (
+                      <option key={a.id} value={a.id}>{a.name}</option>
+                    ))}
+                  </select>
+                  <select
+                    id="comic-translator"
+                    value={translatorId}
+                    onChange={(e) => {
+                      const opt = translators.find((tr) => tr.id === e.target.value);
+                      setTranslatorId(e.target.value);
+                      setTranslator(opt?.name ?? "");
+                    }}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-orange-500"
+                  >
+                    <option value="">Dịch giả (đội dịch)...</option>
+                    {translators.map((tr) => (
+                      <option key={tr.id} value={tr.id}>{tr.name}</option>
+                    ))}
+                  </select>
+                </div>
+                {optionsEmpty && (
+                  <p className="text-[11px] text-orange-400 mt-1">
+                    Chưa có tác giả hoặc dịch giả. Vui lòng thêm tác giả / dịch giả trước khi tạo truyện.
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 mb-2">Thể Loại *</label>
+                <div className="flex flex-wrap gap-2">
+                  {categories.map((cat) => (
+                    <label
+                      key={cat.id}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-medium cursor-pointer transition-colors ${
+                        categorySet.has(cat.name)
+                          ? "bg-orange-500/20 border-orange-500 text-orange-400"
+                          : "bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700"
+                      }`}
+                    >
+                      <input
+                        type="checkbox"
+                        className="hidden"
+                        checked={categorySet.has(cat.name)}
+                        onChange={(e) => {
+                          const newSet = new Set(categorySet);
+                          if (e.target.checked) {
+                            newSet.add(cat.name);
+                          } else {
+                            newSet.delete(cat.name);
+                          }
+                          setCategorySet(newSet);
+                        }}
+                      />
+                      {cat.name}
+                    </label>
+                  ))}
+                </div>
+                {categories.length === 0 && (
+                  <p className="text-[11px] text-orange-400 mt-1">
+                    Chưa có thể loại. Vui lòng thêm thể loại trước khi tạo truyện.
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 mb-2">Tag</label>
+                <div className="flex flex-wrap gap-2">
+                  {tags.map((tag) => (
+                    <label
+                      key={tag.id}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-medium cursor-pointer transition-colors ${
+                        tagSet.has(tag.name)
+                          ? "bg-purple-500/20 border-purple-500 text-purple-400"
+                          : "bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700"
+                      }`}
+                    >
+                      <input
+                        type="checkbox"
+                        className="hidden"
+                        checked={tagSet.has(tag.name)}
+                        onChange={(e) => {
+                          const newSet = new Set(tagSet);
+                          if (e.target.checked) {
+                            newSet.add(tag.name);
+                          } else {
+                            newSet.delete(tag.name);
+                          }
+                          setTagSet(newSet);
+                        }}
+                      />
+                      {tag.name}
+                    </label>
+                  ))}
+                </div>
+                {tags.length === 0 && (
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
+                    Chưa có tag. Bạn có thể thêm tag trong mục quản lý Tag.
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <label htmlFor="comic-description" className="block text-xs font-semibold text-slate-300 mb-1">Mô tả nội dung</label>
+                <textarea
+                  id="comic-description"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="Nhập mô tả nội dung truyện..."
+                  rows={4}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-orange-500 resize-y"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="comic-status" className="block text-xs font-semibold text-slate-300 mb-1">Trạng Thái</label>
+                <select
+                  id="comic-status"
+                  value={status}
+                  onChange={(e) => setStatus(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-orange-500"
+                >
+                  <option value="published">Đã xuất bản (Published)</option>
+                  <option value="ongoing">Đang tiến hành (Ongoing)</option>
+                  <option value="completed">Đã hoàn thành (Completed)</option>
+                  <option value="draft">Bản nháp (Draft)</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                  Upload Ảnh Bìa (Cloudflare R2 Bucket)
+                </label>
+                <ImageUploader
+                  folder="covers"
+                  onImagesUploaded={(urls) => {
+                    if (urls.length > 0) setCoverUrl(urls[0]);
+                  }}
+                />
+                {coverUrl && (
+                  <p className="text-[11px] text-orange-400 mt-1 truncate">Đường dẫn R2: {coverUrl}</p>
+                )}
+              </div>
+
+              <div className="flex justify-end gap-3 pt-2">
+                <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)}>
+                  Hủy
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={!canSaveComic}
+                  className="bg-orange-500 hover:bg-orange-600"
+                >
+                  {submitting ? "Đang lưu..." : "Lưu Thay Đổi"}
+                </Button>
+              </div>
+            </form>
+      </Modal>
+    </div>
+  );
+}

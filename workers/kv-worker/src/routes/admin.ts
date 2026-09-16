@@ -1,0 +1,1216 @@
+/** Admin endpoint handler */
+
+import {
+  err,
+  sbAdminGet as sbGet,
+  sbAdminPost as sbPost,
+  sbAdminPatch as sbPatch,
+  sbAdminDelete as sbDelete,
+  sbAdminGetCount as sbGetCount,
+  sbRpc,
+  handleRes,
+  json,
+} from '../utils/supabase-client';
+import {
+  validateBody,
+  sanitizeBody,
+  getAuthRole,
+  requireRole,
+  VALID_STATUSES,
+  APP_ROLES,
+  isAppRole,
+  assertUuid,
+  uuidFilter,
+  uuidInFilter,
+  identifierFilter,
+  ValidationFailure,
+} from '../utils/validation';
+import {
+  buildUploadKey,
+  isAllowedUploadFolder,
+  validateUploadBatch,
+} from '../utils/r2-keys';
+import { getInfrastructurePayload } from '../utils/infra';
+import { classifyR2Get, conditionalGetOptions } from '../utils/r2-conditional';
+import { invalidateCache, storyCachePrefixes } from '../middleware/cache';
+
+const clamp = (n: number, min: number, max: number) => Math.min(max, Math.max(min, n));
+
+const slugify = (value: string) =>
+  value.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').replace(/-{2,}/g, '-');
+
+async function uniqueSlug(env: Env, token: string | null, base: string, excludeId?: string): Promise<string> {
+  let candidate = base || 'comic';
+  for (let i = 2; ; i++) {
+    const exclude = excludeId ? `&id=neq.${assertUuid(excludeId, 'id')}` : '';
+    const q = `select=id&slug=eq.${encodeURIComponent(candidate)}${exclude}`;
+    const res = await sbGet('stories', q, env, token);
+    if (!res.ok) return candidate;
+    const rows = (await res.json()) as Array<{ id: string }>;
+    if (rows.length === 0) return candidate;
+    candidate = `${base}-${i}`;
+  }
+}
+
+async function okRes(res: Response): Promise<Response> {
+  return res.ok ? json({ success: true }) : await handleRes(res);
+}
+
+async function handlePromote(request: Request, env: Env, token: string | null): Promise<Response> {
+  if (!token) return err('UNAUTHORIZED', 'Authentication required', 401);
+
+  // The gateway has already verified this token's signature before routing
+  // here (index.ts rejects /admin with no auth context), so decoding the
+  // payload for `sub` is safe. Prefer the header the gateway set.
+  const headerUserId = request.headers.get('x-user-id');
+  let userId: string;
+  try {
+    userId = assertUuid(headerUserId ?? JSON.parse(atob(token.split('.')[1])).sub, 'userId');
+  } catch {
+    return err('UNAUTHORIZED', 'Could not determine caller identity', 401);
+  }
+
+  const h = new Headers();
+  h.set('apikey', env.SUPABASE_SERVICE_KEY);
+  h.set('Authorization', `Bearer ${env.SUPABASE_SERVICE_KEY}`);
+  h.set('Content-Type', 'application/json');
+  h.set('Accept', 'application/json');
+
+  const countRes = await fetch(
+    `${env.SUPABASE_URL}/rest/v1/profiles?select=id&role=in.(superadmin,admin,employee)&limit=1`,
+    { method: 'HEAD', headers: { ...Object.fromEntries((h as any).entries()), Prefer: 'count=exact' } },
+  );
+
+  // Fail closed. Previously this check sat inside `if (countRes.ok)`, so any
+  // upstream 5xx skipped it and promoted the caller.
+  if (!countRes.ok) {
+    return err('UPSTREAM_UNAVAILABLE', 'Cannot verify bootstrap state; promotion refused', 503);
+  }
+
+  const range = countRes.headers.get('content-range');
+  const existing = range ? parseInt(range.split('/')[1], 10) : NaN;
+  if (!Number.isFinite(existing)) {
+    return err('UPSTREAM_UNAVAILABLE', 'Cannot verify bootstrap state; promotion refused', 503);
+  }
+  if (existing > 0) {
+    return err('FORBIDDEN', 'An admin already exists; ask them to promote you', 403);
+  }
+
+  const rpcRes = await fetch(
+    `${env.SUPABASE_URL}/rest/v1/rpc/app_private.set_user_role_service`,
+    { method: 'POST', headers: h, body: JSON.stringify({ target_user_id: userId, new_role: 'admin' }) },
+  );
+  if (!rpcRes.ok) {
+    console.error('[admin] promote rpc failed', { status: rpcRes.status });
+    return err('SUPABASE_ERROR', 'Promotion failed', rpcRes.status);
+  }
+  return json({ success: true });
+}
+
+const pathSegment = (path: string, n: number) => path.split('/')[n];
+
+const COMIC_SCHEMA = [
+  { field: 'title', type: 'required-string', maxLength: 200 },
+  { field: 'author', type: 'optional-string', maxLength: 100 },
+  { field: 'description', type: 'optional-string', maxLength: 2000 },
+  { field: 'status', type: 'enum', enumValues: VALID_STATUSES },
+  { field: 'coverUrl', type: 'optional-string', maxLength: 1000 },
+  { field: 'slug', type: 'optional-string', maxLength: 200 },
+] as const;
+
+// ponytail: legacy verb paths (/admin/manage-*) kept as aliases for old clients;
+// new REST-style noun paths are canonical. Drop aliases once all callers migrate.
+export function isAdminResourcePath(
+  path: string,
+  legacy: string,
+  canonical: string,
+): boolean {
+  return path === legacy || path === canonical;
+}
+
+/** Cache prefixes for a bulk story mutation: the list caches plus each story's details. */
+function bulkStoryCachePrefixes(ids: unknown): string[] {
+  const list = Array.isArray(ids) ? ids : [];
+  return [...new Set([...storyCachePrefixes(), ...list.flatMap((id) => storyCachePrefixes(String(id)))])];
+}
+
+export async function handleAdminRequest(
+  request: Request,
+  env: Env,
+  token: string | null,
+  pathname: string,
+): Promise<Response | null> {
+  const url = new URL(request.url);
+  const method = request.method;
+  const path = pathname;
+
+  const userRole = getAuthRole(request);
+
+  // Promote: first-time admin bootstrap — bypass blanket role check
+  if (method === 'POST' && path === '/admin/promote') {
+    return handlePromote(request, env, token);
+  }
+
+  // Blanket check: only superadmin, admin, employee can access any /admin routes
+  if (!requireRole(userRole, ['superadmin', 'admin', 'employee'])) {
+    return err('FORBIDDEN', 'Insufficient permissions to access admin routes', 403);
+  }
+
+  // Granular check: audit reads are superadmin only; writes stay open to
+  // staff roles so editors/admins can log their own actions
+  if (method === 'GET' && path.startsWith('/admin/audit') && !requireRole(userRole, ['superadmin'])) {
+    return err('FORBIDDEN', 'Audit logs require superadmin privileges', 403);
+  }
+
+  // Granular check: site-settings are superadmin only (except scope=public)
+  const isPublicScope = path === '/admin/site-settings' && method === 'GET' && url.searchParams.get('scope') === 'public';
+  if (path.startsWith('/admin/site-settings') && !isPublicScope && !requireRole(userRole, ['superadmin'])) {
+    return err('FORBIDDEN', 'Site settings require superadmin privileges', 403);
+  }
+
+  // Granular check: dashboard overview — staff roles
+  if (method === 'GET' && path === '/admin/analytics/dashboard' && !requireRole(userRole, ['superadmin', 'admin', 'employee'])) {
+    return err('FORBIDDEN', 'Dashboard overview requires staff privileges', 403);
+  }
+
+  try {
+    if (method === 'POST' && isAdminResourcePath(path, '/admin/manage-story', '/admin/stories')) {
+      const body = (await request.json()) as any;
+      const { action } = body;
+
+      if (action === 'create' || (!action && body.story)) {
+        const s = body.story || body;
+        const payload: Record<string, unknown> = {
+          title: s.title,
+          author: s.author,
+          description: s.description || null,
+          cover_url: s.cover_url || null,
+          status: s.status || 'draft',
+          category: s.category || null,
+          author_id: s.author_id || null,
+        };
+        const res = await sbPost('stories', payload, env, token);
+        if (res.ok) await invalidateCache(env.APP_KV, storyCachePrefixes());
+        return handleRes(res);
+      }
+
+      if (action === 'update') {
+        const res = await sbPatch('stories', uuidFilter('id', body.id), body.payload, env, token);
+        if (res.ok) await invalidateCache(env.APP_KV, storyCachePrefixes(body.id));
+        return handleRes(res);
+      }
+
+      if (action === 'delete') {
+        const res = await sbDelete('stories', uuidFilter('id', body.id), env, token);
+        if (res.ok) await invalidateCache(env.APP_KV, storyCachePrefixes(body.id));
+        return okRes(res);
+      }
+
+      if (action === 'bulkUpdateStatus') {
+        const { ids, status: newStatus } = body;
+        const res = await sbPatch(
+          'stories',
+          uuidInFilter('id', ids),
+          { status: newStatus },
+          env,
+          token,
+        );
+        if (res.ok) await invalidateCache(env.APP_KV, bulkStoryCachePrefixes(ids));
+        return okRes(res);
+      }
+
+      if (action === 'bulkDelete') {
+        const res = await sbDelete('stories', uuidInFilter('id', body.ids), env, token);
+        if (res.ok) await invalidateCache(env.APP_KV, bulkStoryCachePrefixes(body.ids));
+        return res.ok
+          ? json({ success: true })
+          : handleRes(res);
+      }
+
+      return err(
+        'BAD_REQUEST',
+        'Unknown manage-story action',
+        400,
+      );
+    }
+
+    if (method === 'POST' && isAdminResourcePath(path, '/admin/manage-chapter', '/admin/chapters')) {
+      const body = (await request.json()) as any;
+      const { action } = body;
+
+      if (action === 'create' || (!action && body.chapter)) {
+        const c = body.chapter || body;
+        const payload = {
+          story_id: c.story_id,
+          chapter_number: c.chapter_number,
+          title: c.title,
+          content: c.content || '',
+        };
+        const res = await sbPost('chapters', payload, env, token);
+        if (res.ok) await invalidateCache(env.APP_KV, storyCachePrefixes(c.story_id));
+        return handleRes(res);
+      }
+
+      if (action === 'update') {
+        const res = await sbPatch('chapters', uuidFilter('id', body.id), body.payload, env, token);
+        // ponytail: body.id is the chapter id, so the chapter-list key can only
+        // be targeted when the caller also sent the story id. Without it the
+        // chapter list falls back to its 120s TTL. Look up story_id here if that
+        // ever becomes a complaint.
+        if (res.ok) {
+          await invalidateCache(env.APP_KV, storyCachePrefixes(body.payload?.story_id ?? body.storyId));
+        }
+        return handleRes(res);
+      }
+
+      if (action === 'delete') {
+        const res = await sbDelete('chapters', uuidFilter('id', body.id), env, token);
+        if (res.ok) await invalidateCache(env.APP_KV, storyCachePrefixes(body.storyId));
+        return okRes(res);
+      }
+
+      return err(
+        'BAD_REQUEST',
+        'Unknown manage-chapter action',
+        400,
+      );
+    }
+
+    if (method === 'POST' && path === '/admin/audit') {
+      const body = (await request.json()) as any;
+      const userId = request.headers.get('x-user-id');
+      const payload = {
+        user_id: userId || null,
+        action: body.action,
+        entity_type: body.entity_type || 'comic',
+        entity_id: body.entity_id || body.comicId || null,
+        metadata: body.metadata || {},
+      };
+      const res = await sbPost('audit_logs', payload, env, token);
+      return okRes(res);
+    }
+
+    if (method === 'GET' && path === '/admin/audit') {
+      const page = clamp(parseInt(url.searchParams.get('page') || '1') || 1, 1, 100000);
+      const pageSize = clamp(parseInt(url.searchParams.get('pageSize') || '50') || 50, 1, 200);
+      const offset = (page - 1) * pageSize;
+      const q = `select=id,actor_user_id,target_email,metadata,created_at&action=in.(dashboard_access,user_create,user_delete)&order=created_at.desc&limit=${pageSize}&offset=${offset}`;
+      const res = await sbGet('admin_audit_logs', q, env, token);
+      if (!res.ok) return handleRes(res);
+      const items = (await res.json()) as any[];
+      const userIds = items.map((l: any) => l.actor_user_id).filter(Boolean);
+      const emailById = new Map<string, string>();
+      if (userIds.length > 0) {
+        const ids = userIds.map((id: string) => encodeURIComponent(id)).join(',');
+        const pRes = await sbGet('profiles', `select=id,email&id=in.(${ids})`, env, token);
+        if (pRes.ok) {
+          for (const p of (await pRes.json()) as any[]) emailById.set(p.id, p.email);
+        }
+      }
+      const mapped = items.map((l: any) => ({
+        id: l.id,
+        action: l.action,
+        target_email: l.target_email ?? ((l.metadata?.email as string) || '') ?? emailById.get(l.actor_user_id) ?? null,
+        created_at: l.created_at,
+      }));
+      const total = await sbGetCount('admin_audit_logs?action=in.(dashboard_access,user_create,user_delete)', env, token);
+      return json({ items: mapped, total });
+    }
+
+    if (method === 'GET' && path === '/admin/notifications') {
+      const pageSize = clamp(parseInt(url.searchParams.get('pageSize') || '20') || 20, 1, 50);
+      const q = `select=id,user_id,action,entity_type,entity_id,metadata,created_at&order=created_at.desc&limit=${pageSize}`;
+      const res = await sbGet('audit_logs', q, env, token);
+      if (!res.ok) {
+        return json({ success: true, data: { notifications: [] } });
+      }
+      const rawLogs = (await res.json().catch(() => [])) as any[];
+      const notifications = (Array.isArray(rawLogs) ? rawLogs : []).map((log: any) => {
+        const title = log.action ? log.action.replace(/_/g, ' ').toUpperCase() : 'SYSTEM NOTIFICATION';
+        const entity = log.entity_type ? `${log.entity_type}: ` : '';
+        const metaStr = log.metadata && typeof log.metadata === 'object' ? JSON.stringify(log.metadata) : '';
+        const message = `${entity}${metaStr ? metaStr.slice(0, 80) : 'System activity logged.'}`;
+        const type = log.action?.includes('delete') || log.action?.includes('error') ? 'warning' : 'info';
+        return {
+          id: log.id || crypto.randomUUID(),
+          title,
+          message,
+          timestamp: new Date(log.created_at || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          read: false,
+          type,
+        };
+      });
+      return json({ success: true, data: { notifications } });
+    }
+
+    if (method === 'GET' && path === '/admin/site-settings') {
+      const keys = url.searchParams.get('keys');
+      const scope = url.searchParams.get('scope');
+      let q = 'select=key,value';
+      if (keys) {
+        const keyList = keys
+          .split(',')
+          .map((k) => k.trim())
+          .filter(Boolean)
+          // Setting keys are identifiers, not UUIDs; identifierFilter keeps the
+          // interpolation inside a guard so nothing can smuggle a PostgREST
+          // operator into the or=() filter.
+          .map((k) => identifierFilter('key', k))
+          .join(',');
+        if (keyList) {
+          q += `&or=(${keyList})`;
+        }
+      }
+      if (scope === 'admin') {
+        q += '&key=like.admin_%';
+      } else if (scope === 'public') {
+        q += '&key=like.public_%';
+      }
+      const svcKey = env.SUPABASE_SERVICE_KEY;
+      if (!svcKey) return err('NOT_CONFIGURED', 'SUPABASE_SERVICE_KEY not set', 500);
+      let supRes;
+      try {
+        supRes = await fetch(`${env.SUPABASE_URL}/rest/v1/site_settings?${q}`, {
+          headers: { apikey: svcKey, Authorization: `Bearer ${svcKey}` },
+        });
+        // ponytail: 5xx = Supabase unreachable (local dev), return empty
+        if (!supRes.ok && supRes.status >= 500) return json([]);
+      } catch {
+        return json([]);
+      }
+      return handleRes(supRes!);
+    }
+
+    if (method === 'POST' && path === '/admin/site-settings') {
+      const svcKey = env.SUPABASE_SERVICE_KEY;
+      if (!svcKey) return err('NOT_CONFIGURED', 'SUPABASE_SERVICE_KEY not set', 500);
+      const body = (await request.json()) as any;
+      const userId = request.headers.get('x-user-id');
+      const headers = { apikey: svcKey, Authorization: `Bearer ${svcKey}`, 'Content-Type': 'application/json' };
+      if (body.payload && Array.isArray(body.payload)) {
+        const results = [];
+        const keys: string[] = [];
+        for (const item of body.payload) {
+          const upsertRes = await fetch(`${env.SUPABASE_URL}/rest/v1/site_settings`, {
+            method: 'POST',
+            headers: { ...headers, Prefer: 'return=representation' },
+            body: JSON.stringify({ key: item.key, value: item.value, updated_by: userId || null }),
+          });
+          results.push(await upsertRes.json().catch(() => ({})));
+          keys.push(item.key);
+        }
+        // Log settings change into private audit table
+        if (keys.length > 0 && userId) {
+          await fetch(`${env.SUPABASE_URL}/rest/v1/admin_audit_logs`, {
+            method: 'POST',
+            headers,
+            body: JSON.stringify({ action: 'settings_update', actor_user_id: userId, metadata: { keys } }),
+          }).catch(() => null);
+        }
+        return json({ success: true, results });
+      }
+      const res = await fetch(`${env.SUPABASE_URL}/rest/v1/site_settings`, {
+        method: 'POST',
+        headers: { ...headers, Prefer: 'return=representation' },
+        body: JSON.stringify({ key: body.key, value: body.value, updated_by: userId || null }),
+      });
+      if (res.ok && userId) {
+        await fetch(`${env.SUPABASE_URL}/rest/v1/admin_audit_logs`, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({ action: 'settings_update', actor_user_id: userId, metadata: { keys: [body.key] } }),
+        }).catch(() => null);
+      }
+      return handleRes(res);
+    }
+
+    const TAXONOMY_ENTITIES: Record<string, { table: string; select: string }> = {
+      category: { table: 'categories', select: 'id,name,description,created_at,updated_at' },
+      author: { table: 'authors', select: 'id,name,bio,created_at,updated_at' },
+      genre: { table: 'genres', select: 'id,name,description,created_at,updated_at' },
+      tag: { table: 'tags', select: 'id,name,description,created_at,updated_at' },
+    };
+
+    if (method === 'GET' && path === '/admin/taxonomy') {
+      const entity = url.searchParams.get('entity');
+      const tax = entity ? TAXONOMY_ENTITIES[entity] : undefined;
+      if (!tax) return err('BAD_REQUEST', 'Unknown taxonomy entity', 400);
+      const res = await sbGet(tax.table, `select=${tax.select}&order=name.asc`, env, token);
+      return handleRes(res);
+    }
+
+    if (
+      method === 'GET' &&
+      path === '/admin/stories/field-values'
+    ) {
+      const field = url.searchParams.get('field');
+      if (field !== 'category' && field !== 'author_id') {
+        return err('BAD_REQUEST', 'Unknown field', 400);
+      }
+      const res = await sbGet(
+        'stories',
+        `select=${field}&limit=1000`,
+        env,
+        token,
+      );
+      return handleRes(res);
+    }
+
+    if (method === 'POST' && path === '/admin/taxonomy') {
+      const body = (await request.json()) as any;
+      const { entity, action: taxAction, id: taxId, payload: taxPayload } = body;
+      const tax = TAXONOMY_ENTITIES[entity];
+      if (!tax) return err('BAD_REQUEST', `Unknown taxonomy entity: ${entity}`, 400);
+
+      if (taxAction === 'create') {
+        const res = await sbPost(tax.table, taxPayload, env, token);
+        return handleRes(res);
+      }
+      if (taxAction === 'update') {
+        const res = await sbPatch(tax.table, uuidFilter('id', taxId), taxPayload, env, token);
+        return handleRes(res);
+      }
+      if (taxAction === 'delete') {
+        const res = await sbDelete(tax.table, uuidFilter('id', taxId), env, token);
+        return okRes(res);
+      }
+
+      return err('BAD_REQUEST', `Unknown taxonomy action: ${entity}/${taxAction}`, 400);
+    }
+
+    if (
+      method === 'GET' &&
+      path === '/admin/role-distribution'
+    ) {
+      const res = await sbGet(
+        'profiles',
+        'select=role&limit=10000',
+        env,
+        token,
+      );
+      const profiles = (await res.json()) as Array<{
+        role: string;
+      }>;
+      if (!Array.isArray(profiles)) return json({ data: [] });
+      const distribution: Record<string, number> = {};
+      for (const p of profiles) {
+        distribution[p.role] = (distribution[p.role] || 0) + 1;
+      }
+      const data = Object.entries(distribution).map(
+        ([role, total]) => ({ role, total }),
+      );
+      return json(data);
+    }
+
+    if (
+      method === 'GET' &&
+      path === '/admin/site-metrics'
+    ) {
+      const type = url.searchParams.get('type');
+      if (type === 'profiles') {
+        const count = await sbGetCount(
+          'profiles?select=id',
+          env,
+          token,
+        );
+        return json({ count });
+      }
+      if (type === 'chapters') {
+        const count = await sbGetCount(
+          'chapters?select=id',
+          env,
+          token,
+        );
+        return json({ count });
+      }
+      if (type === 'site-settings') {
+        const count = await sbGetCount(
+          'site_settings?select=id',
+          env,
+          token,
+        );
+        return json({ count });
+      }
+      return err(
+        'BAD_REQUEST',
+        'Unknown metric type',
+        400,
+      );
+    }
+
+    if (
+      method === 'GET' &&
+      path === '/admin/analytics/dashboard'
+    ) {
+      const [storiesRes, viewsRes] = await Promise.all([
+        sbGet(
+          'stories',
+          'select=id,title,author,views,like_count,status,created_at&limit=5&order=created_at.desc',
+          env,
+          token,
+        ).catch(() => null),
+        sbGet(
+          'stories',
+          'select=views&limit=100000',
+          env,
+          token,
+        ).catch(() => null),
+      ]);
+      const stories = (storiesRes && storiesRes.ok)
+        ? await storiesRes.json().catch(() => [])
+        : [];
+      const views = (viewsRes && viewsRes.ok)
+        ? await viewsRes.json().catch(() => [])
+        : [];
+      const totalViews = Array.isArray(views) ? views.reduce((acc: number, cur: any) => acc + (cur.views || 0), 0) : 0;
+
+      const [totalStories, totalChapters, activeStories] = await Promise.all([
+        sbGetCount('stories?select=id', env, token).catch(() => 0),
+        sbGetCount('chapters?select=id', env, token).catch(() => 0),
+        sbGetCount('stories?select=id&status=neq.draft&status=neq.archived', env, token).catch(() => 0),
+      ]);
+
+      const [engagementRes, infrastructure] = await Promise.all([
+        sbRpc('get_user_engagement_summary', { p_time_range: '30d' }, env, token)
+          .then((res) => (res.ok ? res.json().catch(() => null) : null))
+          .catch(() => null),
+        getInfrastructurePayload(env).catch(() => null),
+      ]);
+
+      // Recent settings changes (last 10) with actor info
+      let recentSettingsChanges: Array<{ id: string; action: string; actor_email: string | null; actor_name: string | null; metadata: Record<string, unknown>; created_at: string }> = [];
+      const logsRes = await sbGet(
+        'admin_audit_logs',
+        'select=id,action,actor_user_id,metadata,created_at&action=eq.settings_update&order=created_at.desc&limit=10',
+        env,
+        token,
+      ).catch(() => null);
+      if (logsRes && logsRes.ok) {
+        const logs = (await logsRes.json().catch(() => [])) as Array<{ id: string; action: string; actor_user_id: string | null; metadata: Record<string, unknown>; created_at: string }>;
+        const actorIds = [...new Set(logs.map((l) => l.actor_user_id).filter(Boolean))] as string[];
+        const emailByName = new Map<string, { email: string; name: string | null }>();
+        if (actorIds.length > 0) {
+          const ids = actorIds.map((id) => encodeURIComponent(id)).join(',');
+          const pRes = await sbGet('profiles', `select=id,email,full_name&id=in.(${ids})`, env, token).catch(() => null);
+          if (pRes && pRes.ok) {
+            for (const p of (await pRes.json().catch(() => [])) as Array<{ id: string; email: string; full_name: string | null }>) {
+              emailByName.set(p.id, { email: p.email, name: p.full_name });
+            }
+          }
+        }
+        recentSettingsChanges = logs.map((l) => {
+          const actor = l.actor_user_id ? emailByName.get(l.actor_user_id) : undefined;
+          return {
+            id: l.id,
+            action: l.action,
+            actor_email: actor?.email ?? null,
+            actor_name: actor?.name ?? null,
+            metadata: l.metadata,
+            created_at: l.created_at,
+          };
+        });
+      }
+
+      return json({
+        stories,
+        stats: {
+          totalStories,
+          totalChapters,
+          activeStories,
+          totalViews,
+        },
+        engagement: engagementRes,
+        infrastructure,
+        recentSettingsChanges,
+      });
+    }
+
+    if (method === 'POST' && path === '/admin/profiles') {
+      const body = (await request.json()) as any;
+      const { action, id } = body;
+
+      // Role and identity mutation is superadmin-only. The blanket gate at the
+      // top of this function admits `employee`, which would otherwise be enough
+      // to self-promote via action: 'updateRole'.
+      if (!requireRole(userRole, ['superadmin'])) {
+        return err('FORBIDDEN', 'Profile mutation requires superadmin privileges', 403);
+      }
+      if (action === 'updateRole' && !isAppRole(body.role)) {
+        return err('VALIDATION_ERROR', 'role must be one of: ' + APP_ROLES.join(', '), 400);
+      }
+
+      if (action === 'updateRole') {
+        const svcKey = env.SUPABASE_SERVICE_KEY || (env as any).SUPABASE_SERVICE_ROLE_KEY;
+        if (svcKey) {
+          const rpcRes = await fetch(`${env.SUPABASE_URL}/rest/v1/rpc/app_private.set_user_role_service`, {
+            method: 'POST',
+            headers: {
+              apikey: svcKey,
+              Authorization: `Bearer ${svcKey}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ target_user_id: assertUuid(id, 'id'), new_role: body.role }),
+          }).catch(() => null);
+
+          if (rpcRes && rpcRes.ok) {
+            return json({ success: true });
+          }
+        }
+
+        const res = await sbPatch('profiles', uuidFilter('id', id), { role: body.role }, env, token);
+        return okRes(res);
+      }
+
+      if (action === 'updateName') {
+        const res = await sbPatch('profiles', uuidFilter('id', id), { full_name: body.full_name }, env, token);
+        return okRes(res);
+      }
+
+      return err(
+        'BAD_REQUEST',
+        'Unknown profile action',
+        400,
+      );
+    }
+
+    if (method === 'POST' && isAdminResourcePath(path, '/admin/manage-user', '/admin/users')) {
+      const body = (await request.json()) as any;
+      const { action } = body;
+      const svcKey = env.SUPABASE_SERVICE_KEY;
+
+      // Account creation and deletion run against the Supabase admin API with
+      // the service key. Superadmin only.
+      if (!requireRole(userRole, ['superadmin'])) {
+        return err('FORBIDDEN', 'User management requires superadmin privileges', 403);
+      }
+      if (action === 'create' && body.role !== undefined && !isAppRole(body.role)) {
+        return err('VALIDATION_ERROR', 'role must be one of: ' + APP_ROLES.join(', '), 400);
+      }
+
+      if (!svcKey) {
+        return err(
+          'NOT_CONFIGURED',
+          'SUPABASE_SERVICE_KEY not set',
+          500,
+        );
+      }
+
+      if (action === 'create') {
+        const adminRes = await fetch(
+          `${env.SUPABASE_URL}/auth/v1/admin/users`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              apikey: svcKey,
+              Authorization: `Bearer ${svcKey}`,
+            },
+            body: JSON.stringify({
+              email: body.email,
+              password: body.password,
+              email_confirm: true,
+              user_metadata: {
+                full_name: body.full_name || '',
+                role: body.role || 'user',
+              },
+            }),
+          },
+        );
+        const adminData = (await adminRes.json()) as any;
+        if (!adminRes.ok)
+          return err(
+            'ADMIN_ERROR',
+            adminData.msg || adminData.error || 'Create user failed',
+            adminRes.status,
+          );
+
+        const createdUser = adminData.user || adminData;
+        const targetRole = body.role || 'user';
+        const fullName = body.full_name || body.fullName || '';
+
+        if (createdUser?.id) {
+          await sbPatch(
+            'profiles',
+            uuidFilter('id', createdUser.id),
+            { role: targetRole, full_name: fullName },
+            env,
+            token,
+          ).catch(() => null);
+        }
+
+        return json({ data: adminData });
+      }
+
+      if (action === 'delete') {
+        const adminRes = await fetch(
+          `${env.SUPABASE_URL}/auth/v1/admin/users/${assertUuid(body.id, 'id')}`,
+          {
+            method: 'DELETE',
+            headers: {
+              apikey: svcKey,
+              Authorization: `Bearer ${svcKey}`,
+            },
+          },
+        );
+        if (!adminRes.ok) {
+          const adminData = (await adminRes.json().catch(() => ({}))) as any;
+          return err(
+            'ADMIN_ERROR',
+            adminData.msg || adminData.error || 'Delete user failed',
+            adminRes.status,
+          );
+        }
+        return json({ success: true });
+      }
+
+      return err(
+        'BAD_REQUEST',
+        'Unknown manage-user action',
+        400,
+      );
+    }
+
+    if (method === 'GET' && path === '/admin/profiles') {
+      const page = Math.max(
+        1,
+        parseInt(url.searchParams.get('page') || '1'),
+      );
+      const pageSize = clamp(parseInt(url.searchParams.get('pageSize') || '50'), 1, 100);
+      const offset = (page - 1) * pageSize;
+      const q = `select=id,email,role,full_name,created_at&order=created_at.desc&limit=${pageSize}&offset=${offset}`;
+      const res = await sbGet('profiles', q, env, token);
+      return handleRes(res);
+    }
+
+    if (method === 'GET' && path === '/admin/profiles/by-ids') {
+      const ids = (url.searchParams.get('ids') || '')
+        .split(',')
+        .map((id) => id.trim())
+        .filter((id) => id.length > 0);
+      if (ids.length === 0) return json({ data: [] });
+      const q = `select=id,email,full_name&order=created_at.desc&limit=500&id=in.(${ids.map(encodeURIComponent).join(',')})`;
+      const res = await sbGet('profiles', q, env, token);
+      return handleRes(res);
+    }
+
+    if (
+      method === 'DELETE' &&
+      path.match(/^\/admin\/profiles\/[^\/]+$/)
+    ) {
+      if (!requireRole(userRole, ['superadmin'])) {
+        return err('FORBIDDEN', 'Profile deletion requires superadmin privileges', 403);
+      }
+      const res = await sbDelete('profiles', uuidFilter('id', pathSegment(path, 3)), env, token);
+      return okRes(res);
+    }
+
+    // ── Comic CMS CRUD ─────────────────────────────────────
+
+    if (method === 'POST' && (path === '/admin/upload-to-r2' || path === '/admin/r2/upload')) {
+      const bucket = env.R2_BUCKET;
+      if (!bucket) {
+        return err('R2_NOT_CONFIGURED', 'R2 bucket not bound', 500);
+      }
+      const contentType = request.headers.get('Content-Type') || '';
+      if (!contentType.includes('multipart/form-data')) {
+        return err('BAD_REQUEST', 'Expected multipart/form-data', 400);
+      }
+      const formData = await request.formData();
+      const fileEntries = formData.getAll('file') as File[];
+      if (fileEntries.length === 0) {
+        return err('BAD_REQUEST', 'No files provided', 400);
+      }
+
+      const folder = (formData.get('folder') as string) || 'uploads';
+      if (!isAllowedUploadFolder(folder)) {
+        return err('BAD_REQUEST', `Invalid folder: ${folder}`, 400);
+      }
+      const comicId = formData.get('comicId') as string | null;
+      const chapterNumber = formData.get('chapterNumber') as string | null;
+      const pageNumbers = formData.getAll('pageNumber') as string[];
+      // The avatars key scheme is `avatars/<userId>.<ext>`, so a client-supplied
+      // userId let any staff member overwrite any user's avatar. Use the
+      // gateway-set identity instead; it comes from the verified JWT.
+      const userId = request.headers.get('x-user-id');
+
+      // Validate-then-write: reject the whole batch before any put, so a bad
+      // file can't leave earlier files orphaned in R2 (no rollback exists).
+      const validation = validateUploadBatch(fileEntries);
+      if (validation) {
+        return err(validation.code, validation.message, validation.status);
+      }
+
+      const uploadedUrls: string[] = [];
+      for (let i = 0; i < fileEntries.length; i++) {
+        const file = fileEntries[i];
+        const ext = (file.name.split('.').pop() || 'png').toLowerCase();
+
+        const key = buildUploadKey({
+          folder,
+          ext,
+          comicId,
+          chapterNumber,
+          pageNumber: pageNumbers[i] ?? null,
+          loopIndex: i,
+          userId,
+        });
+
+        await bucket.put(key, await file.arrayBuffer(), {
+          httpMetadata: {
+            contentType: file.type || 'application/octet-stream',
+            cacheControl: 'public, max-age=31536000, immutable',
+          },
+          customMetadata: {
+            uploadedBy: userId || 'admin',
+            folder,
+            originalName: file.name,
+          },
+        });
+        uploadedUrls.push(`/api/media/${key}`);
+      }
+      return json({ success: true, data: { urls: uploadedUrls } });
+    }
+
+    // ── GET R2 Object directly via Gateway ──────────────────
+    if (method === 'GET' && path.startsWith('/admin/r2/file/')) {
+      if (!requireRole(userRole, ['superadmin', 'admin'])) {
+        return err('FORBIDDEN', 'Direct bucket reads require admin privileges', 403);
+      }
+      const bucket = env.R2_BUCKET;
+      if (!bucket) return err('R2_NOT_CONFIGURED', 'R2 bucket not bound', 500);
+
+      // Decode before the traversal check: the public media route decodes
+      // first, and %2e%2e would otherwise slip past this one.
+      let rawKey = path.replace('/admin/r2/file/', '');
+      try {
+        rawKey = decodeURIComponent(rawKey);
+      } catch {
+        return err('BAD_REQUEST', 'Malformed key', 400);
+      }
+      if (rawKey.includes('..') || rawKey.startsWith('/')) {
+        return err('FORBIDDEN', 'Path traversal detected', 403);
+      }
+
+      const rangeHeader = request.headers.get('range');
+      const ifNoneMatch = request.headers.get('if-none-match');
+
+      const options: R2GetOptions = conditionalGetOptions(ifNoneMatch);
+      if (rangeHeader) options.range = request.headers;
+
+      const fetched = await bucket.get(rawKey, options);
+      const outcome = classifyR2Get(fetched);
+      if (outcome.kind === 'missing') {
+        return err('NOT_FOUND', 'R2 object not found', 404);
+      }
+      if (outcome.kind === 'not-modified') {
+        const notModified = new Headers();
+        if (outcome.etag) notModified.set('etag', outcome.etag);
+        return new Response(null, { status: 304, headers: notModified });
+      }
+      const object = fetched as R2ObjectBody;
+
+      const headers = new Headers();
+      headers.set('cache-control', object.httpMetadata?.cacheControl || 'public, max-age=86400');
+      if (object.httpMetadata?.contentType) headers.set('content-type', object.httpMetadata.contentType);
+      headers.set('etag', object.httpEtag);
+      headers.set('accept-ranges', 'bytes');
+
+      if (object.range) {
+        const r = object.range as { offset?: number; length?: number };
+        const offset = r.offset ?? 0;
+        const length = r.length ?? object.size;
+        const isFullRange = offset === 0 && length >= object.size;
+        if (isFullRange) {
+          // Full-body responses must be 200: a 206 with the whole object is
+          // ORB-blocked by Chrome (image load retries + layout shift).
+          headers.set('content-length', object.size.toString());
+          return new Response(object.body, { status: 200, headers });
+        }
+        headers.set('content-range', `bytes ${offset}-${offset + length - 1}/${object.size}`);
+        headers.set('content-length', length.toString());
+        return new Response(object.body, { status: 206, headers });
+      }
+
+      headers.set('content-length', object.size.toString());
+      return new Response(object.body, { status: 200, headers });
+    }
+
+    if (method === 'GET' && path === '/admin/r2/list') {
+      if (!requireRole(userRole, ['superadmin', 'admin'])) {
+        return err('FORBIDDEN', 'Bucket listing requires admin privileges', 403);
+      }
+      const bucket = env.R2_BUCKET;
+      if (!bucket) {
+        return err('R2_NOT_CONFIGURED', 'R2 bucket not bound', 500);
+      }
+      const prefix = url.searchParams.get('prefix') || '';
+      const list = await bucket.list({ prefix, limit: 1000 });
+      const objects = list.objects.map((o) => ({
+        key: o.key,
+        size: o.size,
+        uploaded: o.uploaded,
+        etag: o.httpEtag,
+      }));
+      return json({ success: true, data: { objects, count: objects.length, truncated: list.truncated } });
+    }
+
+    if (method === 'POST' && path === '/admin/r2/cleanup') {
+      const role = getAuthRole(request);
+      if (!requireRole(role, ['superadmin', 'admin'])) {
+        return err('FORBIDDEN', 'Admin role required', 403);
+      }
+      const bucket = env.R2_BUCKET;
+      if (!bucket) {
+        return err('R2_NOT_CONFIGURED', 'R2 bucket not bound', 500);
+      }
+      const body = (await request.json().catch(() => ({}))) as { prefix?: string; removeAllOld?: boolean };
+      const targetPrefix = body.prefix;
+      if (!targetPrefix) return err('BAD_REQUEST', 'prefix parameter is required to prevent accidental full-bucket deletion', 400);
+
+      let truncated = true;
+      let cursor: string | undefined = undefined;
+      let deletedCount = 0;
+
+      while (truncated) {
+        const listOpts: Record<string, unknown> = { limit: 500 };
+        if (targetPrefix) listOpts.prefix = targetPrefix;
+        if (cursor) listOpts.cursor = cursor;
+
+        const list = await bucket.list(listOpts as any);
+        const keysToDelete = list.objects.map((o) => o.key);
+        if (keysToDelete.length > 0) {
+          await bucket.delete(keysToDelete);
+          deletedCount += keysToDelete.length;
+        }
+        truncated = list.truncated;
+        cursor = list.truncated ? list.cursor : undefined;
+      }
+
+      return json({ success: true, data: { deletedCount, prefix: targetPrefix || 'ALL_BUCKET_KEYS' } });
+    }
+
+    if (method === 'POST' && path === '/admin/comics') {
+      const body = (await request.json()) as Record<string, unknown>;
+      const errors = validateBody(body, COMIC_SCHEMA as any);
+      if (errors.length > 0) {
+        return err('VALIDATION_ERROR', errors.map(e => `${e.field}: ${e.message}`).join('; '), 400);
+      }
+
+      const s = sanitizeBody(body, COMIC_SCHEMA as any);
+
+      const payload: Record<string, unknown> = {
+        title: s.title,
+        author: (s.author as string) || 'Unknown',
+        description: (s.description as string) || null,
+        status: s.status || 'draft',
+      };
+      if (s.coverUrl) payload.cover_url = s.coverUrl;
+      payload.slug = await uniqueSlug(env, token, (s.slug as string) || slugify(String(s.title)));
+      const res = await sbPost('stories', payload, env, token);
+      if (res.ok) await invalidateCache(env.APP_KV, storyCachePrefixes());
+      return handleRes(res);
+    }
+
+    if (method === 'GET' && path === '/admin/comics') {
+      const page = Math.max(1, parseInt(url.searchParams.get('page') || '1'));
+      const pageSize = Math.min(100, Math.max(1, parseInt(url.searchParams.get('pageSize') || '50')));
+      const offset = (page - 1) * pageSize;
+      const q = `select=*,chapters(*)&order=created_at.desc&limit=${pageSize}&offset=${offset}`;
+      const res = await sbGet('stories', q, env, token);
+      return handleRes(res);
+    }
+
+    if (method === 'GET' && path.match(/^\/admin\/comics\/[^\/]+$/)) {
+      const id = pathSegment(path, 3);
+      const res = await sbGet('stories', `${uuidFilter('id', id)}&select=*,chapters(*)`, env, token);
+      return handleRes(res);
+    }
+
+    if (method === 'GET' && path.match(/^\/admin\/comics\/[^\/]+\/chapters$/)) {
+      const comicId = pathSegment(path, 3);
+      const res = await sbGet('chapters', `${uuidFilter('story_id', comicId)}&order=chapter_number.asc`, env, token);
+      return handleRes(res);
+    }
+
+    if (method === 'PATCH' && path.match(/^\/admin\/comics\/[^\/]+$/)) {
+      const id = pathSegment(path, 3);
+      const body = (await request.json()) as Record<string, unknown>;
+      const errors = validateBody(body, COMIC_SCHEMA as any);
+      if (errors.length > 0) {
+        return err('VALIDATION_ERROR', errors.map(e => `${e.field}: ${e.message}`).join('; '), 400);
+      }
+
+      const s = sanitizeBody(body, COMIC_SCHEMA as any);
+
+      const payload: Record<string, unknown> = {};
+      if (s.title !== undefined) payload.title = s.title as string;
+      if (s.author !== undefined) payload.author = (s.author as string) || 'Unknown';
+      if (s.description !== undefined) payload.description = (s.description as string) || null;
+      if (s.status !== undefined) payload.status = s.status as string;
+      if (s.coverUrl !== undefined) payload.cover_url = s.coverUrl as string;
+      if (s.slug !== undefined && (s.slug as string)) {
+        payload.slug = await uniqueSlug(env, token, slugify(String(s.slug)), id);
+      }
+      const res = await sbPatch('stories', uuidFilter('id', id), payload, env, token);
+      if (res.ok) await invalidateCache(env.APP_KV, storyCachePrefixes(id));
+      return handleRes(res);
+    }
+
+    if (method === 'DELETE' && path.match(/^\/admin\/comics\/[^\/]+$/)) {
+      const id = pathSegment(path, 3);
+      const res = await sbDelete('stories', uuidFilter('id', id), env, token);
+      if (res.ok) await invalidateCache(env.APP_KV, storyCachePrefixes(id));
+      return okRes(res);
+    }
+
+    if (method === 'POST' && path.match(/^\/admin\/comics\/[^\/]+\/chapters$/)) {
+      const comicId = pathSegment(path, 3);
+      const body = (await request.json()) as Record<string, unknown>;
+      const errors = validateBody(body, [
+        { field: 'comicId', type: 'optional-string', maxLength: 100 },
+        { field: 'chapterNumber', type: 'optional-string' },
+        { field: 'title', type: 'optional-string', maxLength: 500 },
+        { field: 'pageUrls', type: 'optional-array' },
+      ]);
+      if (errors.length > 0) {
+        return err('VALIDATION_ERROR', errors.map(e => `${e.field}: ${e.message}`).join('; '), 400);
+      }
+
+      const s = sanitizeBody(body, [
+        { field: 'comicId', type: 'optional-string', maxLength: 100 },
+        { field: 'chapterNumber', type: 'optional-string' },
+        { field: 'title', type: 'optional-string', maxLength: 500 },
+        { field: 'pageUrls', type: 'optional-array' },
+      ]);
+
+      const cn = parseInt(String(s.chapterNumber || '1'), 10);
+      const targetComicId = (s.comicId as string) || comicId;
+      const validCn = Number.isFinite(cn) && cn > 0 ? cn : 1;
+      const payload = {
+        story_id: targetComicId,
+        chapter_number: validCn,
+        title: (s.title as string) || `Chapter ${validCn}`,
+        content: JSON.stringify(s.pageUrls || []),
+      };
+
+      // Check if chapter already exists for this comic & chapter number
+      const existingRes = await sbGet(
+        'chapters',
+        `${uuidFilter('story_id', targetComicId)}&chapter_number=eq.${validCn}&select=id`,
+        env,
+        token,
+      );
+
+      if (existingRes.ok) {
+        const existingData = (await existingRes.json()) as Array<{ id: string }>;
+        if (Array.isArray(existingData) && existingData.length > 0) {
+          const existingId = existingData[0].id;
+          const patchRes = await sbPatch(
+            'chapters',
+            uuidFilter('id', existingId),
+            { title: payload.title, content: payload.content },
+            env,
+            token,
+          );
+          if (patchRes.ok) await invalidateCache(env.APP_KV, storyCachePrefixes(targetComicId));
+          return handleRes(patchRes);
+        }
+      }
+
+      const res = await sbPost('chapters', payload, env, token);
+      if (res.ok) await invalidateCache(env.APP_KV, storyCachePrefixes(targetComicId));
+      return handleRes(res);
+    }
+
+    if (method === 'DELETE' && path.match(/^\/admin\/comics\/[^\/]+\/chapters\/[^\/]+$/)) {
+      const chapterId = pathSegment(path, 5);
+      const comicId = pathSegment(path, 3);
+      const res = await sbDelete('chapters', uuidFilter('id', chapterId), env, token);
+      if (res.ok) await invalidateCache(env.APP_KV, storyCachePrefixes(comicId));
+      return okRes(res);
+    }
+
+    // ── Chapter CRUD (Option C: presigned upload flow) ──────
+
+    if (method === 'POST' && path === '/admin/chapters') {
+      const body = (await request.json()) as Record<string, unknown>;
+      const errors = validateBody(body, [
+        { field: 'story_id', type: 'required-string', maxLength: 100 },
+        { field: 'title', type: 'required-string', maxLength: 500 },
+        { field: 'chapter_number', type: 'optional-string' },
+        { field: 'cover_url', type: 'optional-string', maxLength: 1000 },
+      ]);
+      if (errors.length > 0) {
+        return err('VALIDATION_ERROR', errors.map(e => `${e.field}: ${e.message}`).join('; '), 400);
+      }
+      const s = sanitizeBody(body, [
+        { field: 'story_id', type: 'required-string', maxLength: 100 },
+        { field: 'title', type: 'required-string', maxLength: 500 },
+        { field: 'chapter_number', type: 'optional-string' },
+        { field: 'cover_url', type: 'optional-string', maxLength: 1000 },
+      ]);
+      const cn = Math.max(1, parseInt(String(s.chapter_number ?? '1'), 10) || 1);
+      const payload = {
+        story_id: s.story_id as string,
+        chapter_number: cn,
+        title: s.title as string,
+        status: 'uploading',
+        cover_url: s.cover_url ?? null,
+      };
+      const res = await sbPost('chapters', payload, env, token);
+      if (res.ok) await invalidateCache(env.APP_KV, storyCachePrefixes(payload.story_id));
+      return handleRes(res);
+    }
+
+    // --- TRANSLATORS CRUD ENDPOINTS ---
+    if (method === 'GET' && path === '/admin/translators') {
+      const res = await sbGet('translators', 'select=*&order=created_at.desc', env, token);
+      return handleRes(res);
+    }
+
+    if (method === 'POST' && path === '/admin/translators') {
+      const body = (await request.json()) as any;
+      if (!body.name) return err('VALIDATION_ERROR', 'Translator name is required', 400);
+      const payload = {
+        name: String(body.name).trim(),
+        contact: body.contact ? String(body.contact).trim() : null,
+        notes: body.notes ? String(body.notes).trim() : null,
+        status: body.status || 'active',
+      };
+      const res = await sbPost('translators', payload, env, token);
+      return handleRes(res);
+    }
+
+    if (method === 'PATCH' && path.match(/^\/admin\/translators\/[^\/]+$/)) {
+      const id = pathSegment(path, 3);
+      const body = (await request.json()) as any;
+      const payload: Record<string, any> = {};
+      if (body.name !== undefined) payload.name = String(body.name).trim();
+      if (body.contact !== undefined) payload.contact = String(body.contact).trim();
+      if (body.notes !== undefined) payload.notes = String(body.notes).trim();
+      if (body.status !== undefined) payload.status = body.status;
+      const res = await sbPatch('translators', uuidFilter('id', id), payload, env, token);
+      return handleRes(res);
+    }
+
+    if (method === 'DELETE' && path.match(/^\/admin\/translators\/[^\/]+$/)) {
+      const id = pathSegment(path, 3);
+      const res = await sbDelete('translators', uuidFilter('id', id), env, token);
+      return okRes(res);
+    }
+
+    return null;
+  } catch (e: unknown) {
+    if (e instanceof ValidationFailure) {
+      return err('VALIDATION_ERROR', e.message, 400);
+    }
+    // Upstream messages carry table, column, and constraint names. Log them,
+    // do not return them.
+    console.error('[admin] unhandled error', {
+      path: pathname,
+      method,
+      message: e instanceof Error ? e.message : String(e),
+    });
+    return err('INTERNAL_ERROR', 'Request failed', 500);
+  }
+}

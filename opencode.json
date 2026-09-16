@@ -1,0 +1,40 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "provider": {
+    "opencode": {
+      "npm": "@ai-sdk/openai",
+      "options": {
+        "baseURL": "https://api.trouter.cloud/v1"
+      }
+    },
+    "codex": {
+      "npm": "@ai-sdk/openai",
+      "options": {
+        "baseURL": "https://api.trouter.cloud/v1",
+	"apiKey": "sk-trouterai-824c548f86d04a3cd4ea330435c992f579400ff63012209be767fdfb931437d3"
+      }
+    }
+  },
+  "compaction": {
+    "auto": true,
+    "prune": true
+  },
+  "tool_output": {
+    "max_lines": 2000,
+    "max_bytes": 51200
+  },
+  "mcp": {
+    "chrome-devtools": {
+      "type": "local",
+      "command": [
+        "npx",
+        "-y",
+        "chrome-devtools-mcp@latest",
+        "--isolated",
+        "--executablePath",
+        "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe"
+      ],
+      "enabled": true
+    }
+  }
+}

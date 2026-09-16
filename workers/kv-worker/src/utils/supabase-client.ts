@@ -1,0 +1,313 @@
+/** Shared Supabase REST client utilities */
+
+export function recordAnalyticsEngineEvent(
+  env: Env,
+  event: {
+    indexes?: string[];
+    blobs?: string[];
+    doubles?: number[];
+  },
+): void {
+  try {
+    if (env.ANALYTICS_DATA && typeof (env.ANALYTICS_DATA as any).writeDataPoint === 'function') {
+      (env.ANALYTICS_DATA as any).writeDataPoint({
+        indexes: event.indexes || [],
+        blobs: event.blobs || [],
+        doubles: event.doubles || [],
+      });
+    }
+  } catch (e) {
+    console.error('[AnalyticsEngine] Failed to write data point', e);
+  }
+}
+
+function json(data: unknown, status = 200): Response {
+  return Response.json(data, { status });
+}
+
+function err(code: string, message: string, status: number): Response {
+  return Response.json({ success: false, error: { code, message } }, { status });
+}
+
+function authToken(h: Headers): string | null {
+  const a = h.get('Authorization');
+  if (a?.startsWith('Bearer ')) return a.slice(7);
+  return null;
+}
+
+async function sb(
+  path: string,
+  opts: RequestInit,
+  env: Env,
+  token?: string | null,
+): Promise<Response> {
+  const h = new Headers();
+  h.set('apikey', env.SUPABASE_ANON_KEY);
+  h.set('Accept', 'application/json');
+  h.set(
+    'Authorization',
+    token
+      ? `Bearer ${token}`
+      : `Bearer ${env.SUPABASE_ANON_KEY}`,
+  );
+  if (opts.body) h.set('Content-Type', 'application/json');
+  if (opts.headers) {
+    const pref = (opts.headers as Record<string, string>).Prefer;
+    if (pref) h.set('Prefer', pref);
+  }
+  return fetch(`${env.SUPABASE_URL}${path}`, { ...opts, headers: h });
+}
+
+async function sbGet(
+  table: string,
+  q: string,
+  env: Env,
+  token?: string | null,
+): Promise<Response> {
+  return sb(`/rest/v1/${table}?${q}`, { method: 'GET' }, env, token);
+}
+
+async function sbPost(
+  table: string,
+  body: unknown,
+  env: Env,
+  token?: string | null,
+): Promise<Response> {
+  return sb(
+    `/rest/v1/${table}`,
+    {
+      method: 'POST',
+      body: JSON.stringify(body),
+      headers: { Prefer: 'return=representation' },
+    },
+    env,
+    token,
+  );
+}
+
+async function sbPatch(
+  table: string,
+  q: string,
+  body: unknown,
+  env: Env,
+  token?: string | null,
+): Promise<Response> {
+  return sb(
+    `/rest/v1/${table}?${q}`,
+    {
+      method: 'PATCH',
+      body: JSON.stringify(body),
+      headers: { Prefer: 'return=representation' },
+    },
+    env,
+    token,
+  );
+}
+
+async function sbDelete(
+  table: string,
+  q: string,
+  env: Env,
+  token?: string | null,
+): Promise<Response> {
+  return sb(
+    `/rest/v1/${table}?${q}`,
+    {
+      method: 'DELETE',
+      headers: { Prefer: 'return=representation' },
+    },
+    env,
+    token,
+  );
+}
+
+async function sbRpc(
+  name: string,
+  body: unknown,
+  env: Env,
+  token?: string | null,
+): Promise<Response> {
+  return sb(
+    `/rest/v1/rpc/${name}`,
+    { method: 'POST', body: JSON.stringify(body) },
+    env,
+    token,
+  );
+}
+
+async function sbGetCount(
+  q: string,
+  env: Env,
+  token?: string | null,
+): Promise<number> {
+  const h = new Headers();
+  h.set('apikey', env.SUPABASE_ANON_KEY);
+  h.set(
+    'Authorization',
+    token
+      ? `Bearer ${token}`
+      : `Bearer ${env.SUPABASE_ANON_KEY}`,
+  );
+  const res = await fetch(`${env.SUPABASE_URL}/rest/v1/${q}`, {
+    method: 'HEAD',
+    headers: {
+      ...Object.fromEntries((h as any).entries()),
+      Prefer: 'count=exact',
+    },
+  });
+  if (!res.ok) return 0;
+  const range = res.headers.get('content-range');
+  if (range) {
+    const match = range.match(/\/(\d+)$/);
+    if (match) return parseInt(match[1], 10);
+  }
+  return 0;
+}
+
+async function sbAdmin(
+  path: string,
+  opts: RequestInit,
+  env: Env,
+  _token?: string | null,
+): Promise<Response> {
+  const serviceKey = env.SUPABASE_SERVICE_KEY || (env as any).SUPABASE_SERVICE_ROLE_KEY || env.SUPABASE_ANON_KEY;
+  const h = new Headers();
+  h.set('apikey', serviceKey);
+  h.set('Accept', 'application/json');
+  h.set('Authorization', `Bearer ${serviceKey}`);
+  if (opts.body) h.set('Content-Type', 'application/json');
+  if (opts.headers) {
+    const pref = (opts.headers as Record<string, string>).Prefer;
+    if (pref) h.set('Prefer', pref);
+  }
+  return fetch(`${env.SUPABASE_URL}${path}`, { ...opts, headers: h });
+}
+
+async function sbAdminGet(
+  table: string,
+  q: string,
+  env: Env,
+  token?: string | null,
+): Promise<Response> {
+  return sbAdmin(`/rest/v1/${table}?${q}`, { method: 'GET' }, env, token);
+}
+
+async function sbAdminPost(
+  table: string,
+  body: unknown,
+  env: Env,
+  token?: string | null,
+): Promise<Response> {
+  return sbAdmin(
+    `/rest/v1/${table}`,
+    {
+      method: 'POST',
+      body: JSON.stringify(body),
+      headers: { Prefer: 'return=representation' },
+    },
+    env,
+    token,
+  );
+}
+
+async function sbAdminPatch(
+  table: string,
+  q: string,
+  body: unknown,
+  env: Env,
+  token?: string | null,
+): Promise<Response> {
+  return sbAdmin(
+    `/rest/v1/${table}?${q}`,
+    {
+      method: 'PATCH',
+      body: JSON.stringify(body),
+      headers: { Prefer: 'return=representation' },
+    },
+    env,
+    token,
+  );
+}
+
+async function sbAdminDelete(
+  table: string,
+  q: string,
+  env: Env,
+  token?: string | null,
+): Promise<Response> {
+  return sbAdmin(
+    `/rest/v1/${table}?${q}`,
+    {
+      method: 'DELETE',
+      headers: { Prefer: 'return=representation' },
+    },
+    env,
+    token,
+  );
+}
+
+async function sbAdminGetCount(
+  q: string,
+  env: Env,
+  token?: string | null,
+): Promise<number> {
+  const h = new Headers();
+  h.set('apikey', env.SUPABASE_SERVICE_KEY);
+  h.set('Authorization', `Bearer ${env.SUPABASE_SERVICE_KEY}`);
+  const res = await fetch(`${env.SUPABASE_URL}/rest/v1/${q}`, {
+    method: 'HEAD',
+    headers: {
+      ...Object.fromEntries((h as any).entries()),
+      Prefer: 'count=exact',
+    },
+  });
+  if (!res.ok) return 0;
+  const range = res.headers.get('content-range');
+  if (range) {
+    const match = range.match(/\/(\d+)$/);
+    if (match) return parseInt(match[1], 10);
+  }
+  return 0;
+}
+
+const SENSITIVE_PATTERNS = [
+  /\b(?:password|secret|token|key)\s*[:=]\s*\S+/gi,
+];
+
+function sanitizeMessage(msg: string): string {
+  let clean = msg;
+  for (const p of SENSITIVE_PATTERNS) {
+    clean = clean.replace(p, '$1: [REDACTED]');
+  }
+  if (clean.length > 500) clean = clean.slice(0, 500) + '...';
+  return clean;
+}
+
+async function handleRes(res: Response): Promise<Response> {
+  if (!res.ok) {
+    const text = await res.text();
+    return err('SUPABASE_ERROR', sanitizeMessage(text), res.status);
+  }
+  const text = await res.text();
+  if (!text) return json({ success: true });
+  return json(JSON.parse(text));
+}
+
+export {
+  json,
+  err,
+  authToken,
+  sb,
+  sbGet,
+  sbPost,
+  sbPatch,
+  sbDelete,
+  sbRpc,
+  sbGetCount,
+  sbAdminGet,
+  sbAdminPost,
+  sbAdminPatch,
+  sbAdminDelete,
+  sbAdminGetCount,
+  handleRes,
+};

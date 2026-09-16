@@ -1,0 +1,164 @@
+node_modules/
+build/
+dist/
+coverage/
+.DS_Store
+*.log
+.env*
+!.env.example
+docker-local.env
+.dev.vars
+*vercel_env.txt
+.agents/
+agents/
+backend-supabase/supabase/.temp/
+.vscode/
+.claude/
+.grapuco/
+.agent/
+agent/
+*.agents/
+*.agent.md
+*.agent.original.md
+!.github/agents/*.agent.md
+downloads/
+.mcp.json
+
+# Frontend generated artifacts
+frontend/.next/
+frontend/out/
+frontend/.turbo/
+frontend/.tsbuildinfo
+frontend/tsconfig.tsbuildinfo
+frontend/.next-dev/
+
+# Local test artifacts
+.e2e-*.json
+test_*.txt
+upload_results.txt
+frontend/.e2e-test-full.mjs
+frontend/.upload_test.txt
+scripts/full_flow_test.mjs
+LOCAL_TESTING_GUIDE.md
+API_Testing_Instructions.md
+
+# Unused root-level documentation (canonical copies in docs/)
+ACCESS_REAL_DATA.md
+ARCHITECTURE.md
+CODE_REVIEW_COMIC_CMS.md
+DASHBOARD_NO_DATA_FIX.md
+DASHBOARD_ZERO_DATA_ANALYSIS.md
+DELIVERY_SUMMARY.md
+DEPLOYMENT_CHECKLIST_COMEDY_CMS.md
+DEPLOYMENT_CHECKLIST_COMICS.md
+PROJECT_STRUCTURE.md
+REAL_DATA_DIAGNOSTIC.md
+REAL_DATA_QUICKSTART.md
+REAL_DATA_READY.md
+REAL_DATA_SETUP.md
+metadata.json
+
+# Orphaned frontend code
+frontend/src/lib/middleware.ts
+frontend/src/examples/
+
+# Duplicate nested packages
+backend-supabase/backend-supabase/
+
+# Temp / cache artifacts
+frontend/supabase/.temp/
+.venv/
+frontend/frontend/
+backend-supabase/supabase/scripts/node_modules/
+
+# Env key instruction document (contains example values)
+Instruction_create_key.md
+
+# Orphaned root configs / docs
+skills-lock.json
+frontend/README.dev.md
+
+# Dead code / duplicate modules
+src/shared/components/Register.tsx
+frontend/src/lib/supabaseClient.ts
+frontend/src/utils/supabase.ts
+
+# Cleanup analysis artifacts (temporary)
+docs/CLEANUP/
+
+# Archived documentation (superseded or historical)
+docs/ARCHIVE/
+
+# Git filter-branch / history rewrite backups
+.git-rewrite/
+
+# Manual test files (no CI integration, standalone scripts)
+workers/r2-signed-url/worker.test.js
+frontend/tests/
+frontend/test-results/
+
+# Operational scripts (no active references, no CI integration)
+/scripts/
+.github/copilot-instructions.md
+.opencode/opencode.json
+.opencode/plugins/graphify.js
+
+# Local dev logs and tool outputs
+**/.wrangler/
+workers/*/.wrangler/
+frontend/dev_*.txt
+*_err.txt
+*_out.txt
+dev_out.txt
+dev_err.txt
+response.txt
+test.txt
+*.tmp
+*.temp
+*.cache
+.clinerules/
+.cursor/
+.opencode/
+.windsurf/
+graphify-out/
+.fe.log
+.fe.err
+*.err
+thoughts/
+# Production safety & nested dependencies
+**/node_modules/
+**/*.tsbuildinfo
+*.pem
+*.key
+*.crt
+*.pfx
+*.p12
+.env*.local
+!.env.example
+
+# Test & report artifacts
+playwright-report/
+blob-report/
+.playwright-artifacts/
+playwright/.cache/
+**/dist/
+
+# Internal documentation and setup files (ignored on main)
+docs/
+AGENTS.md
+HUONG_DAN_SETUP.md
+deploy_key*
+
+.vercel
+
+backend-supabase/supabase/.branches/
+
+# CocoIndex artifacts
+.cocoindex/
+*.cocoindex
+cocoindex.db
+
+# Agent task plans
+tasks/
+
+.worktrees/
