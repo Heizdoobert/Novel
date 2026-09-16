@@ -3,7 +3,7 @@ import { corsHeaders, isOriginAllowed } from '../middleware/cors';
 
 describe('isOriginAllowed', () => {
   it('allows the production origin', () => {
-    expect(isOriginAllowed('https://lightstory.app')).toBe(true);
+    expect(isOriginAllowed('https://your-domain.app')).toBe(true);
   });
 
   it('allows localhost during development', () => {
@@ -23,8 +23,8 @@ describe('isOriginAllowed', () => {
   });
 
   it('rejects a suffix-confusion origin', () => {
-    // evil-lightstory.app must not match a "lightstory.app" suffix rule.
-    expect(isOriginAllowed('https://evil-lightstory.app', ['lightstory.app'])).toBe(false);
+    // evil-your-domain.app must not match a "your-domain.app" suffix rule.
+    expect(isOriginAllowed('https://evil-your-domain.app', ['your-domain.app'])).toBe(false);
   });
 
   it('rejects a garbage origin', () => {

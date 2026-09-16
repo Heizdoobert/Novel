@@ -54,7 +54,7 @@ export async function getInfrastructurePayload(env: Env) {
     if (token && accountId) {
       try {
         const res = await fetch(
-          `https://api.cloudflare.com/client/v4/accounts/${accountId}/r2/buckets/comic/usage`,
+          `https://api.cloudflare.com/client/v4/accounts/${accountId}/r2/buckets/your-r2-bucket-name/usage`,
           { headers: { Authorization: `Bearer ${token}` } },
         );
         if (res.ok) {

@@ -8,7 +8,7 @@ info:
     Success: { success: true, data: T, timestamp, correlationId? }
     Error:   { success: false, error: { code, message, details? }, timestamp, correlationId? }
 servers:
-  - url: https://api.lightstory.app/api/v1
+  - url: https://api.your-domain.app/api/v1
     description: Production
   - url: http://localhost:8787
     description: Local (via api-gateway)

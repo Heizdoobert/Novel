@@ -13,7 +13,7 @@ function toAbsoluteUrl(value: string): URL {
     const trimmed = value.trim();
     return new URL(/^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`);
   } catch {
-    return new URL("https://lightstory.app");
+    return new URL("https://your-domain.app");
   }
 }
 
@@ -27,7 +27,7 @@ function resolveMetadataBase(): URL {
   const fallback =
     process.env.NEXT_PUBLIC_CUSTOM_GATEWAY_DOMAIN ||
     process.env.NEXT_PUBLIC_GATEWAY_URL_PRODUCTION ||
-    "https://lightstory.app";
+    "https://your-domain.app";
   return toAbsoluteUrl(fallback);
 }
 

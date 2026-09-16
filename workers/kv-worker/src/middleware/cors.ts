@@ -8,16 +8,16 @@ const ALLOWED_ORIGINS = [
   'http://127.0.0.1:3000',
   'http://127.0.0.1:3001',
   'http://0.0.0.0:3000',
-  'https://lightstory.app',
-  'https://staging.lightstory.app',
+  'https://your-domain.app',
+  'https://staging.your-domain.app',
 ];
 
 /**
  * Preview deployments are opt-in via ALLOWED_ORIGIN_SUFFIXES (comma-separated
  * hostnames). The previous rule accepted any *.vercel.app host, which let any
  * third party's free deployment through the gate with credentials enabled.
- * Matching is exact-host or dot-boundary, so "evil-lightstory.app" does not
- * match a "lightstory.app" entry.
+ * Matching is exact-host or dot-boundary, so "evil-your-domain.app" does not
+ * match a "your-domain.app" entry.
  */
 export function isOriginAllowed(
   origin: string | null,

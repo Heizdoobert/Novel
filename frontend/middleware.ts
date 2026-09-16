@@ -6,7 +6,7 @@ const ADMIN_ROLES = ["superadmin", "admin", "employee"];
 
 function addSecurityHeaders(res: NextResponse, isDev: boolean): NextResponse {
   const r2Domain = process.env.R2_CLOUDFLARE_STORAGE_DOMAIN || "*.r2.cloudflarestorage.com";
-  const workerDomain = process.env.NEXT_PUBLIC_GATEWAY_URL_PRODUCTION || "https://kv-worker.hhhuygiau.workers.dev";
+  const workerDomain = process.env.NEXT_PUBLIC_GATEWAY_URL_PRODUCTION || "https://your-worker.workers.dev";
   
   const csp = `
     default-src 'self';

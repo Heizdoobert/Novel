@@ -141,7 +141,7 @@ if ($Local) {
   $jwksUrl = $cloudJwks
   $workerServiceKey = $cloudServiceKey
   $gatewayProd = Get-DotEnvValue $rootEnv 'NEXT_PUBLIC_GATEWAY_URL_PRODUCTION'
-  if (-not $gatewayProd) { $gatewayProd = 'https://kv-worker.hhhuygiau.workers.dev' }
+  if (-not $gatewayProd) { $gatewayProd = 'https://your-worker.workers.dev' }
 }
 
 Write-Host '==> [6.5/8] Writing env files'

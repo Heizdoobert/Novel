@@ -33,7 +33,7 @@ describe('getGatewayUrl', () => {
     vi.stubEnv('NODE_ENV', 'production');
     vi.stubEnv('NEXT_PUBLIC_GATEWAY_URL', '');
     vi.stubEnv('NEXT_PUBLIC_GATEWAY_URL_PRODUCTION', '');
-    expect(getGatewayUrl()).toBe('https://kv-worker.hhhuygiau.workers.dev');
+    expect(getGatewayUrl()).toBe('https://your-worker.workers.dev');
   });
 
   it('falls back to the localhost dev URL outside production when none is configured', () => {

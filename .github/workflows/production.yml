@@ -35,8 +35,8 @@ jobs:
       - name: Build
         run: npm run build
         env:
-          NEXT_PUBLIC_SITE_URL: https://lightstory.app
-          NEXT_PUBLIC_GATEWAY_URL_PRODUCTION: https://kv-worker.hhhuygiau.workers.dev
+          NEXT_PUBLIC_SITE_URL: https://your-domain.app
+          NEXT_PUBLIC_GATEWAY_URL_PRODUCTION: https://your-worker.workers.dev
 
       - name: Test
         run: npm run test:run
@@ -73,7 +73,7 @@ jobs:
 
       - name: Push Supabase migrations
         run: |
-          supabase link --project-ref rwnzsmmfvsetfcnkjoxt
+          supabase link --project-ref your-project-ref
           supabase migration repair --status reverted 20260730000004 || true
           supabase migration repair --status reverted 20260818041037 || true
           supabase db push --linked --include-all
@@ -84,7 +84,7 @@ jobs:
       - name: Smoke test
         run: |
           for i in {1..5}; do
-            if curl -sf "https://kv-worker.hhhuygiau.workers.dev/api/stories?page=1&pageSize=5" > /dev/null 2>&1; then
+            if curl -sf "https://your-worker.workers.dev/api/stories?page=1&pageSize=5" > /dev/null 2>&1; then
               echo "Smoke test passed"
               exit 0
             fi

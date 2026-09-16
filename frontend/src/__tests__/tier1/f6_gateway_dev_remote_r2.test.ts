@@ -16,9 +16,9 @@ describe('F6 gateway dev R2 binding', () => {
     expect(devGateway).toContain('wrangler dev');
   });
 
-  it('worker R2 binding matches the single "comic" bucket that uploads write to', () => {
+  it('worker R2 binding matches the single bucket that uploads write to', () => {
     const config = JSON.parse(readRepoFile('workers/kv-worker/wrangler.jsonc'));
     const binding = config.r2_buckets.find((b: { binding: string }) => b.binding === 'R2_BUCKET');
-    expect(binding?.bucket_name).toBe('comic');
+    expect(binding?.bucket_name).toBe('your-r2-bucket-name');
   });
 });

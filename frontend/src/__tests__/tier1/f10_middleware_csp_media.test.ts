@@ -15,6 +15,6 @@ describe('F10 middleware CSP allows gateway media', () => {
     expect(imgSrc).toContain('${workerDomain}');
     const workerDomainLine =
       middleware.match(/const workerDomain[^;]+;/)?.[0] ?? '';
-    expect(workerDomainLine).toContain('kv-worker.hhhuygiau.workers.dev');
+    expect(workerDomainLine).toContain('your-worker.workers.dev');
   });
 });

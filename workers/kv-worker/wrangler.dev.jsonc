@@ -6,7 +6,7 @@
 {
   "name": "kv-worker",
   "main": "src/index.ts",
-  "account_id": "8ee8907819b5859d9543d68380ab6c1a",
+  "account_id": "your-cloudflare-account-id",
   "compatibility_date": "2026-07-02",
   "compatibility_flags": ["nodejs_compat"],
   "workers_dev": true,
@@ -14,28 +14,28 @@
   "r2_buckets": [
     {
       "binding": "R2_BUCKET",
-      "bucket_name": "comic"
+      "bucket_name": "your-r2-bucket-name"
     }
   ],
   "vars": {
-    "SUPABASE_URL": "https://rwnzsmmfvsetfcnkjoxt.supabase.co",
-    "ALLOWED_ORIGIN_SUFFIXES": "lightstory.app",
-    "SUPABASE_JWKS_URL": "https://rwnzsmmfvsetfcnkjoxt.supabase.co/auth/v1/.well-known/jwks.json",
-    "CLOUDFLARE_ACCOUNT_ID": "8ee8907819b5859d9543d68380ab6c1a"
+    "SUPABASE_URL": "https://your-project-ref.supabase.co",
+    "ALLOWED_ORIGIN_SUFFIXES": "your-domain.app",
+    "SUPABASE_JWKS_URL": "https://your-project-ref.supabase.co/auth/v1/.well-known/jwks.json",
+    "CLOUDFLARE_ACCOUNT_ID": "your-cloudflare-account-id"
   },
   "kv_namespaces": [
     {
       "binding": "APP_KV",
-      "id": "478819101386406ab6d14b2d45d48c45"
+      "id": "your-app-kv-namespace-id"
     },
     {
       "binding": "COMIC_METADATA",
-      "id": "be1064d42006414fb6cb67f1e337a9c9"
+      "id": "your-comic-metadata-kv-namespace-id"
     }
   ],
   "workflows": [
     {
-      "name": "lightstory-workflow",
+      "name": "your-workflow-name",
       "binding": "LIGHTSTORY_WORKFLOW",
       "class_name": "LightStoryWorkflow"
     }
@@ -43,7 +43,7 @@
   "hyperdrive": [
     {
       "binding": "HYPERDRIVE",
-      "id": "5a02e4b848144795b7532d1b6140660b",
+      "id": "your-hyperdrive-id",
       "localConnectionString": "postgres://postgres:password@localhost:5432/postgres"
     }
   ],
@@ -65,7 +65,7 @@
   "analytics_engine_datasets": [
     {
       "binding": "ANALYTICS_DATA",
-      "dataset": "lightstory_analytics"
+      "dataset": "your_analytics_dataset"
     }
   ]
 }

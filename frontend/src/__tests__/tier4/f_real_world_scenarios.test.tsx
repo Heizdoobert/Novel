@@ -114,7 +114,7 @@ describe('Journey 4: Health check API', () => {
 
 describe('Journey 6: Gateway worker contract for R2 upload', () => {
   const makeRequest = (parts: { name: string; filename?: string; contentType?: string; value: string }[], opts: { contentType?: string; role?: string } = {}) =>
-    new Request('https://kv-worker.hhhuygiau.workers.dev/api/admin/r2/upload', {
+    new Request('https://your-worker.workers.dev/api/admin/r2/upload', {
       method: 'POST',
       headers: {
         'Content-Type': opts.contentType ?? 'multipart/form-data; boundary=test-boundary',

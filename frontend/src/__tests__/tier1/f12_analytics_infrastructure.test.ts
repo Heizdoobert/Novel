@@ -19,8 +19,8 @@ describe('F12 Analytics Infrastructure & Production Gateway', () => {
   it('R2 usage endpoint targets correct bucket', () => {
     const infra = readRepoFile('workers/kv-worker/src/utils/infra.ts');
     const wrangler = readRepoFile('workers/kv-worker/wrangler.jsonc');
-    expect(infra).toContain('r2/buckets/comic/usage');
-    expect(wrangler).toContain('"bucket_name": "comic"');
+    expect(infra).toContain('r2/buckets/your-r2-bucket-name/usage');
+    expect(wrangler).toContain('"bucket_name": "your-r2-bucket-name"');
   });
 
   it('analytics hook and UI handle timeout and error states correctly', () => {
@@ -43,6 +43,6 @@ describe('F12 Analytics Infrastructure & Production Gateway', () => {
     const workflow = readRepoFile('.github/workflows/production.yml');
     
     // Ensure the workflow uses the new consistent gateway URL
-    expect(workflow).toContain('https://kv-worker.hhhuygiau.workers.dev/api/stories');
+    expect(workflow).toContain('https://your-worker.workers.dev/api/stories');
   });
 });

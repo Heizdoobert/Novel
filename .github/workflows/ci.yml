@@ -45,8 +45,8 @@ jobs:
       - name: Build
         run: npm run build
         env:
-          NEXT_PUBLIC_SITE_URL: https://lightstory.app
-          NEXT_PUBLIC_GATEWAY_URL_PRODUCTION: https://kv-worker.hhhuygiau.workers.dev
+          NEXT_PUBLIC_SITE_URL: https://your-domain.app
+          NEXT_PUBLIC_GATEWAY_URL_PRODUCTION: https://your-worker.workers.dev
 
       - name: Test with coverage
         run: npm run test:coverage

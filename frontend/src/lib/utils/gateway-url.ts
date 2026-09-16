@@ -1,4 +1,4 @@
-export const FALLBACK_GATEWAY_URL = 'https://kv-worker.hhhuygiau.workers.dev';
+export const FALLBACK_GATEWAY_URL = 'https://your-worker.workers.dev';
 
 let warnedFallback = false;
 

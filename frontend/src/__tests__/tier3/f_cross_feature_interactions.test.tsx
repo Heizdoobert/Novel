@@ -249,7 +249,7 @@ describe('F4 x F6: worker R2 upload route and wrangler bindings', () => {
       'utf8',
     );
     expect(wrangler).toContain('R2_BUCKET');
-    expect(wrangler).toContain('"comic"');
+    expect(wrangler).toContain('"your-r2-bucket-name"');
     expect(wrangler).toContain('SUPABASE_JWKS_URL');
   });
 });
