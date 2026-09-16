@@ -989,7 +989,7 @@ export async function handleAdminRequest(
       return json({ success: true, data: { deletedCount, prefix: targetPrefix || 'ALL_BUCKET_KEYS' } });
     }
 
-    if (method === 'POST' && path === '/admin/comics') {
+    if (method === 'POST' && path === '/admin/novels') {
       const body = (await request.json()) as Record<string, unknown>;
       const errors = validateBody(body, COMIC_SCHEMA as any);
       if (errors.length > 0) {
@@ -1011,7 +1011,7 @@ export async function handleAdminRequest(
       return handleRes(res);
     }
 
-    if (method === 'GET' && path === '/admin/comics') {
+    if (method === 'GET' && path === '/admin/novels') {
       const page = Math.max(1, parseInt(url.searchParams.get('page') || '1'));
       const pageSize = Math.min(100, Math.max(1, parseInt(url.searchParams.get('pageSize') || '50')));
       const offset = (page - 1) * pageSize;
@@ -1020,19 +1020,19 @@ export async function handleAdminRequest(
       return handleRes(res);
     }
 
-    if (method === 'GET' && path.match(/^\/admin\/comics\/[^\/]+$/)) {
+    if (method === 'GET' && path.match(/^\/admin\/novels\/[^\/]+$/)) {
       const id = pathSegment(path, 3);
       const res = await sbGet('stories', `${uuidFilter('id', id)}&select=*,chapters(*)`, env, token);
       return handleRes(res);
     }
 
-    if (method === 'GET' && path.match(/^\/admin\/comics\/[^\/]+\/chapters$/)) {
+    if (method === 'GET' && path.match(/^\/admin\/novels\/[^\/]+\/chapters$/)) {
       const comicId = pathSegment(path, 3);
       const res = await sbGet('chapters', `${uuidFilter('story_id', comicId)}&order=chapter_number.asc`, env, token);
       return handleRes(res);
     }
 
-    if (method === 'PATCH' && path.match(/^\/admin\/comics\/[^\/]+$/)) {
+    if (method === 'PATCH' && path.match(/^\/admin\/novels\/[^\/]+$/)) {
       const id = pathSegment(path, 3);
       const body = (await request.json()) as Record<string, unknown>;
       const errors = validateBody(body, COMIC_SCHEMA as any);
@@ -1056,14 +1056,14 @@ export async function handleAdminRequest(
       return handleRes(res);
     }
 
-    if (method === 'DELETE' && path.match(/^\/admin\/comics\/[^\/]+$/)) {
+    if (method === 'DELETE' && path.match(/^\/admin\/novels\/[^\/]+$/)) {
       const id = pathSegment(path, 3);
       const res = await sbDelete('stories', uuidFilter('id', id), env, token);
       if (res.ok) await invalidateCache(env.APP_KV, storyCachePrefixes(id));
       return okRes(res);
     }
 
-    if (method === 'POST' && path.match(/^\/admin\/comics\/[^\/]+\/chapters$/)) {
+    if (method === 'POST' && path.match(/^\/admin\/novels\/[^\/]+\/chapters$/)) {
       const comicId = pathSegment(path, 3);
       const body = (await request.json()) as Record<string, unknown>;
       const errors = validateBody(body, [
@@ -1122,7 +1122,7 @@ export async function handleAdminRequest(
       return handleRes(res);
     }
 
-    if (method === 'DELETE' && path.match(/^\/admin\/comics\/[^\/]+\/chapters\/[^\/]+$/)) {
+    if (method === 'DELETE' && path.match(/^\/admin\/novels\/[^\/]+\/chapters\/[^\/]+$/)) {
       const chapterId = pathSegment(path, 5);
       const comicId = pathSegment(path, 3);
       const res = await sbDelete('chapters', uuidFilter('id', chapterId), env, token);

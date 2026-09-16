@@ -90,10 +90,10 @@ describe('id validation', () => {
   it('rejects a PostgREST operator in the comic delete path', async () => {
     const evil = 'neq.00000000-0000-0000-0000-000000000000';
     const res = await handleAdminRequest(
-      del(`/admin/comics/${evil}`, 'admin'),
+      del(`/admin/novels/${evil}`, 'admin'),
       env,
       null,
-      `/admin/comics/${evil}`,
+      `/admin/novels/${evil}`,
     );
     expect(res?.status).toBe(400);
     expect(await res!.json()).toMatchObject({
@@ -104,14 +104,14 @@ describe('id validation', () => {
 
   it('rejects a non-uuid in the comic patch path', async () => {
     const res = await handleAdminRequest(
-      new Request('https://gateway.test/api/admin/comics/abc', {
+      new Request('https://gateway.test/api/admin/novels/abc', {
         method: 'PATCH',
         headers: { 'x-user-role': 'admin', 'Content-Type': 'application/json' },
         body: JSON.stringify({ title: 'x' }),
       }),
       env,
       null,
-      '/admin/comics/abc',
+      '/admin/novels/abc',
     );
     expect(res?.status).toBe(400);
   });
@@ -127,7 +127,7 @@ describe('id validation', () => {
   });
 
   it('rejects a non-uuid chapter id on delete', async () => {
-    const path = `/admin/comics/${ID}/chapters/not-a-uuid`;
+    const path = `/admin/novels/${ID}/chapters/not-a-uuid`;
     const res = await handleAdminRequest(del(path, 'admin'), env, null, path);
     expect(res?.status).toBe(400);
   });
