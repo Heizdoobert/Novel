@@ -1,23 +1,14 @@
 "use client";
 
-import { useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { Layers, Plus, Edit, Trash2, Search, BookOpen, FileArchive } from "lucide-react";
+import { Layers, Plus, Edit, Trash2, Search, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import dynamic from "next/dynamic";
-const ImageUploader = dynamic(() => import("@/components/admin/image-uploader"), {
-  ssr: false,
-});
-const CbzBatchImportModal = dynamic(() => import("@/components/admin/cbz-batch-import"), {
-  ssr: false,
-});
 import { useAdminChapters } from "@/hooks/features/use-admin-chapters";
 import { Modal } from "@/components/ui/modal";
 
 export default function AdminChaptersPage() {
   const searchParams = useSearchParams();
   const initialComicId = searchParams.get("comicId") || "all";
-  const [importOpen, setImportOpen] = useState(false);
 
   const {
     chapters,
@@ -36,15 +27,14 @@ export default function AdminChaptersPage() {
     setChapterNumber,
     title,
     setTitle,
-    images,
-    setImages,
+    contentUrl,
+    uploading,
+    handleContentFileSelected,
     submitting,
-    handleBulkCbzProcessed,
     handleOpenCreateModal,
     handleOpenEditModal,
     handleSaveChapter,
     handleDeleteChapter,
-    refresh,
   } = useAdminChapters(initialComicId);
 
   return (
@@ -61,15 +51,6 @@ export default function AdminChaptersPage() {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <Button
-            onClick={() => setImportOpen(true)}
-            disabled={selectedComicId === "all"}
-            title={selectedComicId === "all" ? "Chọn một bộ truyện trước khi nhập hàng loạt" : undefined}
-            variant="outline"
-            className="gap-2 font-bold shrink-0"
-          >
-            <FileArchive size={18} /> Nhập CBZ Hàng Loạt
-          </Button>
           <Button onClick={handleOpenCreateModal} className="gap-2 bg-orange-500 hover:bg-orange-600 font-bold shrink-0">
             <Plus size={18} /> Thêm Chương Mới
           </Button>
@@ -118,7 +99,7 @@ export default function AdminChaptersPage() {
               <tr>
                 <th className="p-4">Số Chương</th>
                 <th className="p-4">Tên Chương</th>
-                <th className="p-4">Số Trang Ảnh R2</th>
+                <th className="p-4">Tệp Nội Dung</th>
                 <th className="p-4">Ngày Tạo</th>
                 <th className="p-4 text-right">Thao Tác</th>
               </tr>
@@ -131,7 +112,7 @@ export default function AdminChaptersPage() {
                     <td className="p-4 font-semibold text-slate-900 dark:text-white">{ch.title || `Chương ${ch.chapter_number}`}</td>
                     <td className="p-4">
                       <span className="px-2.5 py-1 rounded bg-slate-200 dark:bg-slate-800 text-cyan-400 font-mono font-bold">
-                        {ch.images?.length || 0} trang ảnh
+                        {ch.content_url ? "Đã có" : "Chưa có"}
                       </span>
                     </td>
                     <td className="p-4 text-slate-500 dark:text-slate-400">
@@ -224,21 +205,22 @@ export default function AdminChaptersPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">
-                  Upload Các Trang Ảnh Chương (Tự động tải lên R2 Chapters Bucket)
+                <label htmlFor="chapter-content-file" className="block text-xs font-semibold text-slate-300 mb-1">
+                  Tệp Nội Dung Chương (.txt/.md)
                 </label>
-                <ImageUploader
-                  folder="chapters"
-                  bulkChapters={!editingChapter}
-                  onCbzName={(name) => {
-                    if (!editingChapter) setTitle(name);
+                <input
+                  id="chapter-content-file"
+                  type="file"
+                  accept=".txt,.md,text/plain,text/markdown"
+                  disabled={uploading}
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) void handleContentFileSelected(file);
                   }}
-                  onCbzProcessed={handleBulkCbzProcessed}
-                  onImagesUploaded={(urls) => {
-                    if (!editingChapter) setImages((prev) => [...prev, ...urls]);
-                  }}
+                  className="w-full text-xs text-slate-300 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:bg-orange-500 file:text-white file:font-bold file:cursor-pointer"
                 />
-                <p className="text-[11px] text-slate-400 mt-1">Đã chọn: {images.length} trang ảnh</p>
+                {uploading && <p className="text-[11px] text-orange-400 mt-1">Đang tải lên...</p>}
+                {contentUrl && !uploading && <p className="text-[11px] text-emerald-400 mt-1">Đã tải lên: {contentUrl}</p>}
               </div>
 
               <div className="flex justify-end gap-3 pt-2">
@@ -251,14 +233,6 @@ export default function AdminChaptersPage() {
               </div>
             </form>
       </Modal>
-
-      {/* CBZ Batch Import Modal */}
-      <CbzBatchImportModal
-        open={importOpen}
-        onClose={() => setImportOpen(false)}
-        comicId={selectedComicId === "all" ? null : selectedComicId}
-        onComplete={() => void refresh()}
-      />
     </div>
   );
 }
