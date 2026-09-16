@@ -19,7 +19,7 @@ import {
   UnauthorizedError,
 } from './middleware/auth';
 import { handleStoriesRequest } from './routes/stories';
-import { handleComicsRequest } from './routes/comics';
+import { handleNovelsRequest } from './routes/novels';
 import { handleAdminRequest } from './routes/admin';
 import { handleAnalyticsRequest } from './routes/analytics';
 import { handleUserRequest } from './routes/user';
@@ -368,8 +368,8 @@ export default {
         authToken(downstreamHeaders),
         strippedPath,
       );
-    } else if (strippedPath.startsWith('/comics')) {
-      res = await handleComicsRequest(
+    } else if (strippedPath.startsWith('/novels')) {
+      res = await handleNovelsRequest(
         createForwardRequest(url.toString()),
         env,
         authToken(downstreamHeaders),

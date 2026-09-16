@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { handleStoriesRequest } from '../routes/stories';
-import { handleComicRecommendations } from '../routes/comics';
+import { handleNovelRecommendations } from '../routes/novels';
 import { fakeKV } from './helpers/fake-kv';
 
 function envWith(kv: KVNamespace): Env {
@@ -77,7 +77,7 @@ describe('GET /comics/recommendations', () => {
     });
 
     const url = new URL('https://gateway.test/api/comics/recommendations?comicId=abc&select=*');
-    const res = await handleComicRecommendations(url, env, null);
+    const res = await handleNovelRecommendations(url, env, null);
 
     expect(res.status).toBe(400);
     expect(await res.json()).toMatchObject({ error: { code: 'VALIDATION_ERROR' } });
@@ -93,7 +93,7 @@ describe('GET /comics/recommendations', () => {
     vi.stubGlobal('fetch', async () => Response.json([{ id: '1', title: 'Top' }]));
 
     const url = new URL('https://gateway.test/api/comics/recommendations');
-    const res = await handleComicRecommendations(url, env, null);
+    const res = await handleNovelRecommendations(url, env, null);
 
     expect(res.status).toBe(200);
   });

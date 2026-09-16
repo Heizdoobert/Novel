@@ -33,7 +33,7 @@ async function uniqueSlug(env: Env, token: string | null, base: string): Promise
   }
 }
 
-export async function handleComicsRequest(
+export async function handleNovelsRequest(
   request: Request,
   env: Env,
   token: string | null,
@@ -44,11 +44,11 @@ export async function handleComicsRequest(
   const method = request.method;
 
   try {
-    if (method === 'GET' && pathname === '/comics/recommendations') {
-      return handleComicRecommendations(url, env, token);
+    if (method === 'GET' && pathname === '/novels/recommendations') {
+      return handleNovelRecommendations(url, env, token);
     }
 
-    if (method === 'GET' && pathname === '/comics') {
+    if (method === 'GET' && pathname === '/novels') {
       const page = Math.max(
         1,
         parseInt(url.searchParams.get('page') || '1'),
@@ -89,7 +89,7 @@ export async function handleComicsRequest(
       return json(data);
     }
 
-    if (method === 'GET' && pathname.match(/^\/comics\/[^\/]+$/)) {
+    if (method === 'GET' && pathname.match(/^\/novels\/[^\/]+$/)) {
       const id = pathname.split('/')[2];
       if (!isValidUuid(id))
         return err('VALIDATION_ERROR', 'Invalid comic id', 400);
@@ -107,7 +107,7 @@ export async function handleComicsRequest(
       return json(data);
     }
 
-    if (method === 'POST' && pathname === '/comics') {
+    if (method === 'POST' && pathname === '/novels') {
       const role = getAuthRole(request);
       if (!requireRole(role, ['superadmin', 'admin', 'employee'])) {
         return err('FORBIDDEN', 'Staff role required', 403);
@@ -151,7 +151,7 @@ export async function handleComicsRequest(
       return handleRes(res);
     }
 
-    if (method === 'GET' && pathname === '/comics/chapters/batch') {
+    if (method === 'GET' && pathname === '/novels/chapters/batch') {
       const comicIds = url.searchParams.get('comicIds');
       if (!comicIds) return json([]);
       const ids = comicIds.split(',').filter(Boolean);
@@ -168,7 +168,7 @@ export async function handleComicsRequest(
 
     if (
       method === 'GET' &&
-      pathname.match(/^\/comics\/[^\/]+\/chapters$/)
+      pathname.match(/^\/novels\/[^\/]+\/chapters$/)
     ) {
       const comicId = pathname.split('/')[2];
       if (!isValidUuid(comicId))
@@ -194,7 +194,7 @@ export async function handleComicsRequest(
 
     if (
       method === 'GET' &&
-      pathname.match(/^\/comics\/[^\/]+\/chapters\/[^\/]+$/)
+      pathname.match(/^\/novels\/[^\/]+\/chapters\/[^\/]+$/)
     ) {
       const parts = pathname.split('/');
       const chapterId = parts[4];
@@ -218,7 +218,7 @@ export async function handleComicsRequest(
 
     if (
       method === 'POST' &&
-      pathname.match(/^\/comics\/[^\/]+\/chapters$/)
+      pathname.match(/^\/novels\/[^\/]+\/chapters$/)
     ) {
       const comicId = pathname.split('/')[2];
       const body = (await request.json()) as any;
@@ -252,7 +252,7 @@ export async function handleComicsRequest(
   }
 }
 
-export async function handleComicRecommendations(
+export async function handleNovelRecommendations(
   url: URL,
   env: Env,
   token: string | null,
