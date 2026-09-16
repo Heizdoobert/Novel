@@ -1,6 +1,6 @@
 ---
 name: Feature request
-about: Suggest an idea or feature for Light Story
+about: Suggest an idea or feature for Light Novel
 title: 'feat: '
 labels: 'enhancement'
 assignees: ''

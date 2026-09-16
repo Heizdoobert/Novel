@@ -1,6 +1,6 @@
 # Docker Deployment Guide
 
-Light Story ships a **unified single-container image**: PostgreSQL (local), the API Gateway Worker (wrangler), and the Next.js standalone frontend all run in one container. A frontend-only image (`Dockerfile.frontend`) is also published to Docker Hub.
+Light Novel ships a **unified single-container image**: PostgreSQL (local), the API Gateway Worker (wrangler), and the Next.js standalone frontend all run in one container. A frontend-only image (`Dockerfile.frontend`) is also published to Docker Hub.
 
 ## Prerequisites
 

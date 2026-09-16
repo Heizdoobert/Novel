@@ -1,6 +1,6 @@
 # Unified API Gateway — Cloudflare Worker `kv-worker`
 
-The single Cloudflare Worker serving the whole Light Story API. Deployed under the **worker name `kv-worker`** (legacy name kept for deployment continuity), it consolidates what were previously 5 separate Workers (`api-gateway`, `stories-worker`, `comics-worker`, `admin-worker`, `analytics-worker`) into one deployment with modular route handlers and shared middleware.
+The single Cloudflare Worker serving the whole Light Novel API. Deployed under the **worker name `kv-worker`** (legacy name kept for deployment continuity), it consolidates what were previously 5 separate Workers (`api-gateway`, `stories-worker`, `comics-worker`, `admin-worker`, `analytics-worker`) into one deployment with modular route handlers and shared middleware.
 
 ## Topology
 
@@ -13,7 +13,7 @@ kv-worker (wrangler.jsonc, src/index.ts)
 │   └── securityHeaders.ts    # Security headers on every response
 ├── routes/
 │   ├── stories.ts            # /api/stories, /api/chapters
-│   ├── comics.ts             # /api/comics
+│   ├── novels.ts             # /api/novels
 │   ├── admin.ts              # /api/admin/* (privileged)
 │   ├── analytics.ts          # /api/analytics/* (Analytics Engine)
 │   ├── user.ts               # /api/user
@@ -45,7 +45,7 @@ All API routes are mounted under `/api/*`. Public health endpoint: `GET /api/hea
 |---|---|---|
 | `GET /api/health` | index.ts | Health check (used by compose healthcheck + CI smoke test) |
 | `/api/stories`, `/api/chapters` | stories.ts | Novel & chapter domain |
-| `/api/comics` | comics.ts | Comic domain |
+| `/api/novels` | novels.ts | Public reader-facing novel domain |
 | `/api/admin/*`, `/api/auth/*` | admin.ts / auth path | Privileged ops, JWT-gated |
 | `/api/analytics/*` | analytics.ts | Metrics aggregation |
 | `/api/user` | user.ts | User profile / history |

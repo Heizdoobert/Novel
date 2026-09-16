@@ -1,6 +1,6 @@
-# Light Story — Production Engine & Platform Documentation
+# Light Novel — Production Engine & Platform Documentation
 
-[![Build & Test](https://github.com/Heizdoobert/Light-Story/actions/workflows/ci.yml/badge.svg)](https://github.com/Heizdoobert/Light-Story/actions/workflows/ci.yml)
+[![Build & Test](https://github.com/Heizdoobert/Novel/actions/workflows/ci.yml/badge.svg)](https://github.com/Heizdoobert/Novel/actions/workflows/ci.yml)
 [![Node Version](https://img.shields.io/badge/node-%3E%3D22.0.0-brightgreen.svg)](https://nodejs.org/)
 [![Next.js](https://img.shields.io/badge/Next.js-16.2-black.svg)](https://nextjs.org/)
 [![Cloudflare Workers](https://img.shields.io/badge/Cloudflare-Workers-F38020.svg)](https://workers.cloudflare.com/)
@@ -8,7 +8,7 @@
 [![Docker](https://img.shields.io/badge/Docker-Ready-2496ED.svg)](https://www.docker.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-**Light Story** is an enterprise-grade, high-performance digital publishing platform for web comics and web novels. Designed for sub-second page loads, global edge delivery, and secure digital asset protection, Light Story combines a modern Next.js 16 App Router frontend with a single unified API Gateway running as a Cloudflare Worker and a Supabase (PostgreSQL + `pgvector`) data layer.
+**Light Novel** is an enterprise-grade, high-performance digital publishing platform for web novels. Designed for sub-second page loads, global edge delivery, and secure digital asset protection, Light Novel combines a modern Next.js 16 App Router frontend with a single unified API Gateway running as a Cloudflare Worker and a Supabase (PostgreSQL + `pgvector`) data layer. (Forked from the Light Story comic platform — the reading pipeline was rebuilt around single text-file chapters instead of image pages.)
 
 ---
 
@@ -29,7 +29,7 @@
 
 ## 🏗 Architectural Topology
 
-Light Story employs a decoupled, edge-first architecture. All API traffic passes through a **Unified API Gateway** (deployed as the Cloudflare Worker `kv-worker`) on Cloudflare's global edge network before routing to domain route handlers or Supabase.
+Light Novel employs a decoupled, edge-first architecture. All API traffic passes through a **Unified API Gateway** (deployed as the Cloudflare Worker `kv-worker`) on Cloudflare's global edge network before routing to domain route handlers or Supabase.
 
 ```mermaid
 graph TD
@@ -40,7 +40,7 @@ graph TD
     subgraph Edge Layer [Cloudflare Workers Network]
         Gateway -->|JWT / CORS / Rate Limit| Router["Worker Router & Middleware"]
         Router --> Stories["/stories, /chapters"]
-        Router --> Comics["/comics"]
+        Router --> Novels["/novels"]
         Router --> Admin["/admin (Privileged)"]
         Router --> Analytics["/analytics (Metrics)"]
         Router --> User["/user"]
@@ -51,7 +51,7 @@ graph TD
         Gateway -->|Supabase REST / RLS| Supabase["Supabase DB (pgvector + RLS)"]
         Gateway -->|KV / Queues / Workflows| CFState["Cloudflare KV · Queues · Workflows"]
         Gateway -->|Hyperdrive| Supabase
-        Gateway -->|Signed Bucket Access| R2["Cloudflare R2 Bucket (Covers & Chapters)"]
+        Gateway -->|Signed Bucket Access| R2["Cloudflare R2 Bucket (Covers & Chapter Text)"]
     end
 ```
 
@@ -65,7 +65,7 @@ Key facts about the current topology:
 
 ## ✨ Core Platform Capabilities
 
-- 🎨 **Next-Gen Reader Interface**: Optimized image pagination, CBZ comic package extraction, pre-fetching, and responsive layout scaling.
+- 📖 **Page-Turn Text Reader**: Client-side pagination of chapter text (`lib/reader/paginate-text.ts`), theme-aware, with offline chapter caching.
 - 🔍 **AI Semantic Search**: Vector-based content discovery utilizing Supabase `pgvector` with 1536-dimensional embeddings.
 - 🔐 **Secure Media Distribution**: Cloudflare R2 bucket protection with short-lived HMAC & JWT signed URLs to prevent hotlinking and pirating.
 - 🛡 **Role-Based Access Control (RBAC)**: Multi-tiered access policies (`superadmin`, `admin`, `employee`, `user`) enforced via database Row-Level Security (RLS).
@@ -77,7 +77,7 @@ Key facts about the current topology:
 ## 📁 Repository Structure
 
 ```text
-Light-Story/
+Light-Novel/
 ├── frontend/                     # Next.js 16 App Router application (Presentation Layer)
 │   ├── src/app/                  # Pages, layouts, and API proxies
 │   ├── src/components/           # Reusable UI components (Tailwind CSS v4, Lucide)
@@ -131,7 +131,7 @@ Light-Story/
 
 ## 🔑 Environment Configuration
 
-Light Story uses environment variable validation across services. Create `.env` in the root directory — the frontend auto-imports the keys it needs into `frontend/.env.local` via `frontend/scripts/import_root_env.mjs`. See [.env.example](.env.example) and [Instruction_create_key.md](Instruction_create_key.md) for the full reference.
+Light Novel uses environment variable validation across services. Create `.env` in the root directory — the frontend auto-imports the keys it needs into `frontend/.env.local` via `frontend/scripts/import_root_env.mjs`. See [.env.example](.env.example) and [Instruction_create_key.md](Instruction_create_key.md) for the full reference.
 
 ### Essential Production Variables
 
@@ -179,8 +179,8 @@ For complete instructions on generating keys and setup rules, see [Instruction_c
 
 1. **Clone & Install Dependencies:**
    ```bash
-   git clone https://github.com/Heizdoobert/Light-Story.git
-   cd Light-Story
+   git clone https://github.com/Heizdoobert/Novel.git
+   cd Novel
    npm install
    ```
 
@@ -223,7 +223,7 @@ Production routing for the Worker is `api.lightstory.app/*`; the frontend deploy
 
 ### Docker (Alternative / Local Production Simulation)
 
-Light Story ships a unified single-container image (`node:22-slim`; postgres + gateway + frontend standalone).
+Light Novel ships a unified single-container image (`node:22-slim`; postgres + gateway + frontend standalone).
 
 1. **Build & Launch Production Containers:**
    ```bash

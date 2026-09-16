@@ -1,6 +1,6 @@
-# Contributing to Light Story
+# Contributing to Light Novel
 
-Thank you for your interest in contributing to **Light Story**! We welcome contributions from the open-source community. Please read this guide before submitting issues or pull requests.
+Thank you for your interest in contributing to **Light Novel**! We welcome contributions from the open-source community. Please read this guide before submitting issues or pull requests.
 
 ---
 

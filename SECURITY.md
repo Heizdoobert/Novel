@@ -2,7 +2,7 @@
 
 ## Supported Versions
 
-The following table lists the versions of Light Story currently receiving security updates:
+The following table lists the versions of Light Novel currently receiving security updates:
 
 | Version | Supported          |
 | ------- | ------------------ |
@@ -11,7 +11,7 @@ The following table lists the versions of Light Story currently receiving securi
 
 ## Reporting a Vulnerability
 
-We take the security of Light Story seriously. If you discover a vulnerability or security issue, please **DO NOT** create a public GitHub issue or disclose the issue publicly.
+We take the security of Light Novel seriously. If you discover a vulnerability or security issue, please **DO NOT** create a public GitHub issue or disclose the issue publicly.
 
 ### How to Report
 
@@ -33,4 +33,4 @@ Please include as much of the following information as possible:
 3. **Patch & Release**: We will prepare a fix and release a patch version as soon as possible.
 4. **Public Disclosure**: After a patch is published, we will coordinate public credit and advisory release.
 
-Thank you for helping keep Light Story and its community safe!
+Thank you for helping keep Light Novel and its community safe!

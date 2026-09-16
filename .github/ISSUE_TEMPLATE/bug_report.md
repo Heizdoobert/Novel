@@ -1,6 +1,6 @@
 ---
 name: Bug report
-about: Create a report to help us improve Light Story
+about: Create a report to help us improve Light Novel
 title: 'bug: '
 labels: 'bug'
 assignees: ''
