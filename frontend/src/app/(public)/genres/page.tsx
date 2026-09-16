@@ -22,7 +22,7 @@ export default async function GenresIndexPage() {
             Danh Sách Thể Loại
           </h1>
           <p className="mt-4 text-slate-600 dark:text-slate-400 text-sm sm:text-base max-w-2xl mx-auto">
-            Khám phá các bộ truyện tranh theo thể loại yêu thích của bạn.
+            Khám phá các bộ truyện chữ theo thể loại yêu thích của bạn.
           </p>
         </div>
 

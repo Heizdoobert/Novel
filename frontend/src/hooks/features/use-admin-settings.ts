@@ -13,7 +13,7 @@ import { toast } from "sonner";
 
 export function useAdminSettings() {
   const [siteName, setSiteName] = useState("LightStory");
-  const [siteDescription, setSiteDescription] = useState("Website Đọc Truyện Tranh Trực Tuyến Tốc Độ Cao");
+  const [siteDescription, setSiteDescription] = useState("Website Đọc Truyện Chữ Trực Tuyến Tốc Độ Cao");
   const [maintenanceMode, setMaintenanceMode] = useState(false);
   const [compactMode, setCompactMode] = useState(false);
   const [sidebarControl, setSidebarControl] = useState<SidebarControl>(DEFAULT_SIDEBAR_CONTROL);

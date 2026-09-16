@@ -115,7 +115,7 @@ export function useHomePagePresenter(
           }
         }
       } catch (error) {
-        console.error("Lỗi tải danh sách truyện tranh:", error);
+        console.error("Lỗi tải danh sách truyện chữ:", error);
       } finally {
         if (isMounted) setLoading(false);
       }

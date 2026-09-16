@@ -383,7 +383,7 @@ export default function AdminDashboardPage() {
                 </thead>
                 <tbody className="divide-y divide-slate-200 dark:divide-slate-800/60">
                   {[
-                    { name: "R2_BUCKET (comic)", always: true },
+                    { name: "R2_BUCKET (novel)", always: true },
                     { name: "LIGHTSTORY_QUEUE", key: "queue_binding" },
                     { name: "LIGHTSTORY_WORKFLOW", key: "workflow_binding" },
                     { name: "APP_KV", key: "kv_binding" },

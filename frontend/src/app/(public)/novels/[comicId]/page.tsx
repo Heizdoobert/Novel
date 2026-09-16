@@ -27,7 +27,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     return { title: 'Không tìm thấy truyện | Light Story' };
   }
 
-  const title = `${comic.title} - Đọc Truyện Tranh Online | Light Story`;
+  const title = `${comic.title} - Đọc Truyện Chữ Online | Light Story`;
   const description = (comic.description || `Đọc truyện ${comic.title} online`).slice(0, 155);
 
   return {

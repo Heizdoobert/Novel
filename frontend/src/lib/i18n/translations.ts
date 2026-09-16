@@ -4,7 +4,7 @@ export const TRANSLATIONS: Record<Language, Record<string, string>> = {
   VI: {
     // Shared / Common
     home: "Trang chủ",
-    comics: "Truyện tranh",
+    comics: "Truyện chữ",
     search: "Tìm kiếm",
     bookmarks: "Tủ truyện",
     history: "Lịch sử đọc",
@@ -132,7 +132,7 @@ export const TRANSLATIONS: Record<Language, Record<string, string>> = {
     profile_sign_in_prompt: "Đăng nhập để xem và quản lý hồ sơ của bạn.",
     profile_sign_in: "Đăng nhập",
 
-    footer_about: "Nền tảng đọc truyện tranh bản quyền. Đăng tải và quản lý bởi Quản trị viên.",
+    footer_about: "Nền tảng đọc truyện chữ bản quyền. Đăng tải và quản lý bởi Quản trị viên.",
 
     // Homepage Sections
     popular_comics: "TRUYỆN PHỔ BIẾN",
@@ -172,7 +172,7 @@ export const TRANSLATIONS: Record<Language, Record<string, string>> = {
     tab_moderation: "Kiểm duyệt nâng cao",
 
     // CMS Stats & Headers
-    cms_header_title: "Quản Lý Truyện Tranh",
+    cms_header_title: "Quản Lý Truyện Chữ",
     cms_header_desc: "Quản lý thông tin truyện, chương, tài nguyên ảnh, nhóm dịch và kiểm duyệt nội dung trên một bảng điều khiển thống nhất.",
     total_comics: "Tổng số truyện",
     drafts: "Bản nháp",
@@ -385,7 +385,7 @@ export const TRANSLATIONS: Record<Language, Record<string, string>> = {
   EN: {
     // Shared / Common
     home: "Home",
-    comics: "Comics",
+    comics: "Novels",
     search: "Search",
     bookmarks: "Bookmarks",
     history: "History",
@@ -440,7 +440,7 @@ export const TRANSLATIONS: Record<Language, Record<string, string>> = {
     // Filter Menu & Search Page
     filter_menu_title: "Filter & Search",
     search_label: "Search",
-    search_placeholder: "Comic title, author...",
+    search_placeholder: "Novel title, author...",
     category_label: "Category",
     sort_by_label: "Sort By",
     sort_newest: "Newly Updated",
@@ -448,13 +448,13 @@ export const TRANSLATIONS: Record<Language, Record<string, string>> = {
     sort_oldest: "Oldest",
     apply_filter: "Apply & Search",
     quick_search_category: "Quick category search...",
-    search_results_title: "Comic List",
+    search_results_title: "Novel List",
     search_keyword_label: "Keyword:",
     search_category_label: "• Category:",
     results_count: "results",
     filter_button: "Filters",
     empty_search_title: "No results found",
-    empty_search_description: "No comics match your filters. Try changing your keyword or category.",
+    empty_search_description: "No novels match your filters. Try changing your keyword or category.",
     reset_filter: "Reset filters",
     read_now: "Read now",
     clear_selection: "Clear selection",
@@ -485,22 +485,22 @@ export const TRANSLATIONS: Record<Language, Record<string, string>> = {
     under_construction_description: "This page is under construction and coming soon. Check back later!",
 
     // Bookmarks
-    bookmarks_title: "Followed Comics",
-    bookmarks_empty_title: "You haven't followed any comics yet",
-    bookmarks_empty_description: "Explore our rich collection and hit Follow to easily track your favorite comics here!",
+    bookmarks_title: "Followed Novels",
+    bookmarks_empty_title: "You haven't followed any novels yet",
+    bookmarks_empty_description: "Explore our rich collection and hit Follow to easily track your favorite novels here!",
     bookmarks_empty_cta: "Explore now",
     bookmarks_following: "Following",
     bookmarks_unfollow: "Unfollow",
 
     // Quick Search
     quick_search_title: "Quick Search",
-    quick_search_placeholder: "Enter comic title or author...",
+    quick_search_placeholder: "Enter novel title or author...",
     quick_search_see_all: "See all results for",
     quick_search_no_results: "No results found.",
 
     // Search Input
-    search_input_placeholder: "Enter keywords to find comics...",
-    search_input_label: "Search comics",
+    search_input_placeholder: "Enter keywords to find novels...",
+    search_input_label: "Search novels",
 
     // Profile
     profile_email: "Email",
@@ -513,19 +513,19 @@ export const TRANSLATIONS: Record<Language, Record<string, string>> = {
     profile_sign_in_prompt: "Sign in to view and manage your profile.",
     profile_sign_in: "Sign In",
 
-    footer_about: "A licensed comic reading platform. Published and managed by Administrators.",
+    footer_about: "A licensed novel reading platform. Published and managed by Administrators.",
 
     // Homepage Sections
-    popular_comics: "POPULAR COMICS",
+    popular_comics: "POPULAR NOVELS",
     newly_updated_comics: "NEWLY UPDATED",
-    top_read_comics: "TOP READ COMICS",
-    view_all_comics: "View all comics »",
+    top_read_comics: "TOP READ NOVELS",
+    view_all_comics: "View all novels »",
     new_badge: "New",
-    no_comics_yet: "No comics available yet.",
+    no_comics_yet: "No novels available yet.",
     continue_reading: "CONTINUE READING",
     updating: "Updating",
     searching: "Searching...",
-    no_comics_found: "No comics found.",
+    no_comics_found: "No novels found.",
 
     // Navigation & Sidebar
     nav_dashboard: "Dashboard",
@@ -533,10 +533,10 @@ export const TRANSLATIONS: Record<Language, Record<string, string>> = {
     nav_audit_logs: "Audit Logs",
     nav_operations: "Operations Center",
     nav_operations_data: "Operations Data",
-    nav_create_comic: "Comic & Story CMS",
+    nav_create_comic: "Novel & Story CMS",
     nav_categories: "Categories",
     nav_tags: "Tags",
-    nav_descriptions: "Comic Descriptions",
+    nav_descriptions: "Novel Descriptions",
     nav_authors: "Authors & Translators",
     nav_users: "User Management",
     nav_ads: "Ads & Revenue",
@@ -544,8 +544,8 @@ export const TRANSLATIONS: Record<Language, Record<string, string>> = {
     nav_profile: "My Profile",
 
     // Comic CMS & Tabs
-    tab_catalog: "Comic Catalog",
-    tab_editor: "Comic Editor",
+    tab_catalog: "Novel Catalog",
+    tab_editor: "Novel Editor",
     tab_chapters: "Chapters",
     tab_translators: "Translators",
     tab_feedback: "Feedback & Moderation",
@@ -553,13 +553,13 @@ export const TRANSLATIONS: Record<Language, Record<string, string>> = {
     tab_moderation: "Advanced Moderation",
 
     // CMS Stats & Headers
-    cms_header_title: "Comic Management CMS",
-    cms_header_desc: "Manage comic metadata, chapters, assets, moderation, and audit trails from one unified control surface.",
-    total_comics: "Total Comics",
+    cms_header_title: "Novel Management CMS",
+    cms_header_desc: "Manage novel metadata, chapters, assets, moderation, and audit trails from one unified control surface.",
+    total_comics: "Total Novels",
     drafts: "Drafts",
     published: "Published",
     total_pages: "Total Pages",
-    create_new_comic: "Create New Comic",
+    create_new_comic: "Create New Novel",
 
     // Analytics Dashboard
     analytics_title: "Readership, Content & Infrastructure Operational Dashboard",
@@ -637,7 +637,7 @@ export const TRANSLATIONS: Record<Language, Record<string, string>> = {
     dash_latest_title: "Latest Stories",
     dash_no_data: "No data yet.",
     dash_quick_actions: "Quick Actions",
-    dash_create_comic: "Create New Comic",
+    dash_create_comic: "Create New Novel",
     dash_manage_users: "Manage Users",
     dash_view_analytics: "View Analytics",
     dash_system_settings: "System Settings",
@@ -706,26 +706,26 @@ export const TRANSLATIONS: Record<Language, Record<string, string>> = {
     logout_failed: "Logout failed",
 
     // Comic Management Toast
-    comic_updated: "Comic updated",
-    comic_created: "Comic created",
+    comic_updated: "Novel updated",
+    comic_created: "Novel created",
     draft_saved_locally: "Draft saved locally",
     draft_saved_catalog: "Draft saved to catalog and local recovery storage",
-    comic_published: "Comic published",
-    comic_deleted: "Comic deleted",
+    comic_published: "Novel published",
+    comic_deleted: "Novel deleted",
     chapter_deleted: "Chapter deleted successfully",
-    failed_load_comics: "Failed to load comics from server",
+    failed_load_comics: "Failed to load novels from server",
     catalog_refreshed: "Catalog refreshed",
-    editing_new_draft: "Editing a new comic draft",
-    failed_save_comic: "Failed to save comic.",
+    editing_new_draft: "Editing a new novel draft",
+    failed_save_comic: "Failed to save novel.",
     failed_save_chapter: "Failed to save chapter.",
     failed_delete_chapter: "Failed to delete chapter.",
-    choose_comic_first: "Choose a comic before uploading pages.",
+    choose_comic_first: "Choose a novel before uploading pages.",
     add_at_least_one_page: "Add at least one page.",
     page_exceeds_limit: "Page {name} exceeds the 2 MB limit.",
-    fix_metadata_before_save: "Fix the comic metadata before saving.",
-    fix_metadata_before_publish: "Fix the comic metadata before publishing.",
+    fix_metadata_before_save: "Fix the novel metadata before saving.",
+    fix_metadata_before_publish: "Fix the novel metadata before publishing.",
     fix_chapter_metadata: "Fix the chapter metadata before uploading.",
-    restore_success: "Comic restored: {id}",
+    restore_success: "Novel restored: {id}",
     permanently_deleted: "Permanently deleted data ID: {id}",
     profanity_filter_saved: "Profanity filter saved",
     extracting_cbz: "Giải nén ảnh xem trước từ tệp .cbz...",

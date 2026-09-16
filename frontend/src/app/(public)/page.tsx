@@ -5,8 +5,8 @@ import type { ComicContext as Comic } from '@/services/novels/comic.service';
 import type { Chapter } from '@/types/entities';
 
 export const metadata: Metadata = {
-  title: 'Light-Story | Đọc Truyện Tranh Online Miễn Phí',
-  description: 'Website đọc truyện tranh online miễn phí với hàng ngàn đầu truyện mới nhất, chất lượng cao, cập nhật liên tục.',
+  title: 'Light-Story | Đọc Truyện Chữ Online Miễn Phí',
+  description: 'Website đọc truyện chữ online miễn phí với hàng ngàn đầu truyện mới nhất, chất lượng cao, cập nhật liên tục.',
 };
 
 export const revalidate = 300;

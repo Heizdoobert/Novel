@@ -217,7 +217,7 @@ export default function AdminAnalyticsPage() {
                 </thead>
                 <tbody className="divide-y divide-slate-200 dark:divide-slate-800/60">
                   <tr>
-                    <td className="p-3 font-mono font-bold text-cyan-400">R2_BUCKET (comic)</td>
+                    <td className="p-3 font-mono font-bold text-cyan-400">R2_BUCKET (novel)</td>
                     <td className="p-3">
                       <span className="flex items-center gap-1 text-emerald-400 font-bold">
                         <CheckCircle size={14} /> Hoạt động

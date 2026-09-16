@@ -12,8 +12,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { genreSlug } = await params;
   const name = capitalize(genreSlug);
   return {
-    title: `${name} - Truyện Tranh Thể Loại | Light Story`,
-    description: `Khám phá các bộ truyện tranh thể loại ${name} mới nhất tại Light Story.`,
+    title: `${name} - Truyện Chữ Thể Loại | Light Story`,
+    description: `Khám phá các bộ truyện chữ thể loại ${name} mới nhất tại Light Story.`,
   };
 }
 
